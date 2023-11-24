@@ -1,0 +1,1128 @@
+Xác suất
+Trong trò chơi may rủi, xác suất có một định nghĩa rất trực quan. Tuy nhiên, đây không phải là trường hợp trong các bối cảnh khác. Ngày nay lý thuyết xác suất đang được sử dụng rộng rãi hơn nhiều với từ xác suất thường được sử dụng trong ngôn ngữ hàng ngày. Tính năng tự động hoàn thành của Google về “Khả năng xảy ra” mang lại cho chúng ta: “sinh đôi”, “hôm nay trời mưa”, “bị sét đánh” và “bị ung thư”. Một trong những mục tiêu của phần này của cuốn sách là giúp chúng ta hiểu xác suất hữu ích như thế nào để hiểu và mô tả các sự kiện trong thế giới thực khi thực hiện phân tích dữ liệu. Lý thuyết xác suất rất hữu ích bất cứ khi nào dữ liệu của chúng ta bị ảnh hưởng ngẫu nhiên theo một cách nào đó. Tất cả các chương khác trong cuốn sách này đều dựa trên lý thuyết xác suất. Do đó, kiến ​​thức về xác suất là không thể thiếu đối với hầu hết các thách thức phân tích dữ liệu.
+
+Bởi vì biết cách tính xác suất giúp bạn có lợi thế trong các trò chơi may rủi, trong suốt lịch sử, nhiều cá nhân thông minh, bao gồm cả các nhà toán học nổi tiếng như Cardano, Fermat và Pascal, đã dành thời gian và sức lực để suy nghĩ về toán học của những trò chơi này. Kết quả là Lý thuyết Xác suất ra đời. Xác suất tiếp tục rất hữu ích trong các trò chơi may rủi hiện đại. Ví dụ, trong poker, chúng ta có thể tính xác suất thắng một ván bài dựa trên các quân bài trên bàn. Ngoài ra, các sòng bạc dựa vào lý thuyết xác suất để phát triển các trò chơi gần như chắc chắn đảm bảo lợi nhuận. Chúng tôi sẽ sử dụng các trò chơi sòng bạc để minh họa các khái niệm cơ bản.
+
+Phần này của cuốn sách thảo luận về các khái niệm có thể tìm thấy trong nhiều cuốn sách toàn diện về lý thuyết xác suất. Những cuốn sách này đi sâu vào các lý thuyết và công thức toán học đằng sau xác suất.
+
+Tuy nhiên, cuốn sách này có một cách tiếp cận khác. Thay vì đi sâu vào các lý thuyết toán học, nó sử dụng R để chứng minh những khái niệm này. Điều này giúp người đọc hình dung và hiểu rõ hơn về nguyên tắc xác suất trong thực tế, vì họ có thể nhìn thấy kết quả và kết quả bằng cách chạy mã.
+
+Bất chấp cách tiếp cận thực tế này, cuốn sách không áp dụng ngay các khái niệm xác suất này vào dữ liệu trong thế giới thực. Mối liên hệ giữa lý thuyết xác suất và dữ liệu thực tế sẽ được trình bày trong phần tiếp theo hoặc một phần của cuốn sách.
+
+Nói cách khác, trong khi bạn đang tìm hiểu về xác suất bây giờ, sẽ mất nhiều thời gian hơn một chút trước khi bạn thấy các khái niệm này liên quan trực tiếp đến các tập dữ liệu thực tế như thế nào.
+3   Xác suất rời rạc
+Chúng tôi bắt đầu bằng cách đề cập đến một số nguyên tắc cơ bản liên quan đến dữ liệu phân loại. Tập hợp con của xác suất được gọi là xác suất rời rạc . Nó sẽ giúp chúng ta hiểu lý thuyết xác suất mà sau này chúng ta sẽ giới thiệu cho dữ liệu số và dữ liệu liên tục, vốn phổ biến hơn nhiều trong các ứng dụng khoa học dữ liệu. Xác suất rời rạc hữu ích hơn trong các trò chơi bài và do đó chúng tôi sử dụng chúng làm ví dụ.
+
+3.1 Tần số tương đối
+Xác suất từ ​​được sử dụng trong ngôn ngữ hàng ngày. Trả lời các câu hỏi về xác suất thường khó, nếu không muốn nói là không thể. Ở đây chúng ta thảo luận về một định nghĩa toán học về xác suất cho phép chúng ta đưa ra câu trả lời chính xác cho một số câu hỏi nhất định.
+
+Ví dụ: nếu tôi có 2 hạt màu đỏ và 3 hạt màu xanh bên trong một chiếc bình 1 (hầu hết các sách xác suất đều sử dụng thuật ngữ cổ xưa này, vì vậy chúng tôi cũng vậy) và tôi chọn ngẫu nhiên một hạt, xác suất chọn được hạt màu đỏ là bao nhiêu? Trực giác mách bảo chúng ta rằng câu trả lời là 2/5 hoặc 40%. Một định nghĩa chính xác có thể được đưa ra bằng cách lưu ý rằng có năm kết quả có thể xảy ra, trong đó có hai kết quả thỏa mãn điều kiện cần thiết cho sự kiện “nhặt một hạt màu đỏ”. Vì mỗi kết quả trong số năm kết quả đều có cùng cơ hội xảy ra nên chúng tôi kết luận rằng xác suất xảy ra là 0,4 đối với màu đỏ và 0,6 đối với màu xanh lam.
+
+Một cách hữu hình hơn để nghĩ về xác suất của một sự kiện là tỷ lệ số lần sự kiện xảy ra khi chúng ta lặp lại thí nghiệm vô số lần, độc lập và trong cùng điều kiện.
+
+3.2 Ký hiệu
+Chúng tôi sử dụng ký hiệu
+để biểu thị xác suất của sự kiện
+đang xảy ra. Chúng ta sử dụng thuật ngữ sự kiện rất chung chung để chỉ những điều có thể xảy ra khi điều gì đó xảy ra một cách tình cờ. Trong ví dụ trước của chúng tôi, sự kiện là “nhặt một hạt màu đỏ”. Trong một cuộc thăm dò chính trị mà chúng tôi gọi ngẫu nhiên 100 cử tri có khả năng sẽ bỏ phiếu, một ví dụ về sự kiện là “kêu gọi 48 đảng viên Đảng Dân chủ và 52 đảng viên Đảng Cộng hòa”.
+
+Trong các ứng dụng khoa học dữ liệu, chúng ta thường xử lý các biến liên tục. Những sự kiện này thường sẽ là những câu như “người này có cao hơn 6 feet không”. Trong trường hợp này, chúng ta viết các sự kiện ở dạng toán học hơn:
+. Chúng ta sẽ thấy nhiều hơn những ví dụ này sau. Ở đây chúng tôi tập trung vào dữ liệu phân loại.
+
+3.3 Phân bố xác suất
+Nếu chúng ta biết tần suất tương đối của các loại khác nhau thì việc xác định sự phân bổ cho các kết quả được phân loại là tương đối đơn giản. Chúng tôi chỉ đơn giản gán một xác suất cho từng loại. Trong những trường hợp có thể coi là những hạt trong bình, đối với mỗi loại hạt, tỷ lệ của chúng sẽ xác định sự phân bổ.
+
+Nếu chúng ta gọi ngẫu nhiên những cử tri có khả năng sẽ bỏ phiếu từ một nhóm dân số gồm 44% Đảng Dân chủ, 44% Đảng Cộng hòa, 10% chưa quyết định và 2% Đảng Xanh, thì các tỷ lệ này sẽ xác định xác suất cho mỗi nhóm. Phân bố xác suất là:
+
+Pr (chọn một đảng viên Đảng Cộng hòa)	=	0,44
+Pr (chọn một đảng viên Đảng Dân chủ)	=	0,44
+Pr (chọn một câu chưa quyết định)	=	0,10
+Pr (chọn màu xanh lá cây)	=	0,02
+3.4 Monte Carlo
+Máy tính cung cấp một cách để thực sự thực hiện thí nghiệm ngẫu nhiên đơn giản được mô tả ở trên: chọn ngẫu nhiên một hạt từ một túi chứa ba hạt màu xanh và hai hạt màu đỏ. Trình tạo số ngẫu nhiên cho phép chúng tôi bắt chước quá trình chọn ngẫu nhiên.
+
+Một ví dụ là samplehàm trong R. Chúng tôi minh họa cách sử dụng nó trong đoạn mã bên dưới. Đầu tiên, chúng ta sử dụng hàm repđể tạo bình:
+
+```{r}
+beads <- rep(c("red", "blue"), times = c(2,3))
+beads
+#> [1] "red"  "red"  "blue" "blue" "blue"
+```
+và sau đó sử dụng sampleđể chọn ngẫu nhiên một hạt:
+
+```{r}
+sample(beads, 1)
+#> [1] "blue"
+```
+Dòng mã này tạo ra một kết quả ngẫu nhiên. Chúng tôi muốn lặp lại thí nghiệm này vô số lần, nhưng không thể lặp lại mãi mãi. Thay vào đó, chúng tôi lặp lại thí nghiệm với số lần đủ lớn để tạo ra kết quả thực tế tương đương với việc lặp lại mãi mãi. Đây là một ví dụ về mô phỏng Monte Carlo .
+
+Phần lớn những gì các nhà thống kê toán học và lý thuyết nghiên cứu, mà chúng tôi không đề cập đến trong cuốn sách này, liên quan đến việc đưa ra các định nghĩa chặt chẽ về “thực tế tương đương” cũng như nghiên cứu xem một số lượng lớn các thí nghiệm đưa chúng ta đến gần những gì xảy ra trong giới hạn đến mức nào. Ở phần sau của phần này, chúng tôi cung cấp một cách tiếp cận thực tế để quyết định thế nào là “đủ lớn”.
+
+Để thực hiện mô phỏng Monte Carlo đầu tiên, chúng tôi sử dụng replicatehàm này, cho phép chúng tôi lặp lại cùng một nhiệm vụ bao nhiêu lần. Ở đây, chúng tôi lặp lại sự kiện ngẫu nhiên
+10.000 lần:
+```{r}
+B <- 10000
+events <- replicate(B, sample(beads, 1))
+```
+Bây giờ chúng ta có thể xem liệu định nghĩa của chúng ta có thực sự phù hợp với phép tính gần đúng mô phỏng Monte Carlo này hay không. Chúng ta có thể sử dụng tableđể xem phân phối:
+```{r}
+tab <- table(events)
+tab
+#> events
+#> blue  red 
+#> 6028 3972
+```
+và prop.tablecho chúng ta tỷ lệ:
+```{r}
+prop.table(tab)
+#> events
+#>  blue   red 
+#> 0.603 0.397
+```
+Những con số trên là xác suất ước tính được cung cấp bởi mô phỏng Monte Carlo này. Lý thuyết thống kê, không được đề cập ở đây, cho chúng ta biết rằng cũng như
+càng lớn thì ước tính càng tiến gần đến 3/5=.6 và 2/5=.4.
+
+Mặc dù đây là một ví dụ đơn giản và không hữu ích lắm, nhưng chúng ta sẽ sử dụng mô phỏng Monte Carlo để ước tính xác suất trong những trường hợp khó tính toán xác suất chính xác hơn. Trước khi đi sâu vào các ví dụ phức tạp hơn, chúng tôi sử dụng các ví dụ đơn giản để trình diễn các công cụ tính toán có sẵn trong R.
+
+3.4.1 Đặt hạt giống ngẫu nhiên
+Trước khi tiếp tục, chúng tôi sẽ giải thích ngắn gọn dòng mã quan trọng sau:
+```{r}
+set.seed(1986) 
+```
+
+Xuyên suốt cuốn sách này, chúng tôi sử dụng các trình tạo số ngẫu nhiên. Điều này ngụ ý rằng nhiều kết quả được trình bày thực sự có thể thay đổi một cách tình cờ, điều này cho thấy rằng phiên bản cố định của cuốn sách có thể hiển thị kết quả khác với kết quả bạn nhận được khi cố gắng viết mã như được hiển thị trong cuốn sách. Điều này thực sự ổn vì kết quả là ngẫu nhiên và thay đổi theo thời gian. Tuy nhiên, nếu bạn muốn đảm bảo rằng kết quả giống hệt nhau mỗi khi chạy chúng, bạn có thể đặt hạt giống tạo số ngẫu nhiên của R thành một số cụ thể. Ở trên, chúng tôi đặt nó là 1986. Chúng tôi muốn tránh sử dụng cùng một hạt giống mọi lúc. Cách chọn hạt phổ biến là chọn năm - tháng - ngày. Ví dụ: chúng tôi đã chọn 1986 vào ngày 20 tháng 12 năm 2018:
+.
+
+Bạn có thể tìm hiểu thêm về cách thiết lập hạt giống bằng cách xem tài liệu:
+```{r}
+?set.seed
+```
+
+Trong các bài tập, chúng tôi có thể yêu cầu bạn đặt hạt giống để đảm bảo rằng kết quả bạn thu được chính xác là những gì chúng tôi mong đợi.
+
+3.4.2 Có và không thay thế
+Hàm này samplecó một đối số cho phép chúng ta chọn nhiều phần tử từ bình. Tuy nhiên, theo mặc định, lựa chọn này diễn ra mà không cần thay thế : sau khi một hạt được chọn, nó sẽ không được đưa trở lại túi. Hãy chú ý điều gì sẽ xảy ra khi chúng ta yêu cầu chọn ngẫu nhiên năm hạt:
+
+```{r}
+sample(beads, 5)
+#> [1] "red"  "blue" "blue" "blue" "red"
+sample(beads, 5)
+#> [1] "red"  "red"  "blue" "blue" "blue"
+sample(beads, 5)
+#> [1] "blue" "red"  "blue" "red"  "blue"
+```
+Điều này dẫn đến sự sắp xếp lại luôn có ba hạt màu xanh và hai hạt màu đỏ. Nếu chúng tôi yêu cầu chọn sáu hạt, chúng tôi sẽ gặp lỗi:
+```{r}
+sample(beads, 6)
+```
+Error in sample.int(length(x), size, replace, prob) :    cannot take a sample larger than the population when 'replace = FALSE'
+
+Tuy nhiên, samplechức năng này có thể được sử dụng trực tiếp mà không cần sử dụng replicate, để lặp lại cùng một thí nghiệm chọn 1 trong 5 hạt, liên tục, trong cùng điều kiện. Để làm điều này, chúng tôi lấy mẫu bằng phương pháp thay thế : trả hạt trở lại bình sau khi chọn nó. Chúng ta có thể yêu cầu samplethực hiện điều này bằng cách thay đổi replaceđối số, mặc định là FALSE, thành replace = TRUE:
+
+```{r}
+events <- sample(beads, B, replace = TRUE)
+prop.table(table(events))
+#> events
+#>  blue   red 
+#> 0.602 0.398
+```
+Không có gì ngạc nhiên khi chúng tôi nhận được kết quả rất giống với kết quả thu được trước đó với replicate.
+
+3.5 Độc lập
+Ta nói hai sự kiện độc lập nếu kết quả của sự kiện này không ảnh hưởng đến sự kiện kia. Ví dụ kinh điển là việc tung đồng xu. Mỗi lần chúng ta tung một đồng xu công bằng, xác suất nhìn thấy mặt ngửa là 1/2 bất kể những lần tung trước đó cho thấy điều gì. Điều này cũng đúng khi chúng ta nhặt hạt từ chiếc bình để thay thế. Trong ví dụ trên, xác suất trúng màu đỏ là 0,40 bất kể các lần rút trước đó.
+
+Nhiều ví dụ về các sự kiện không độc lập đến từ các trò chơi bài. Khi chúng ta chia lá bài đầu tiên, xác suất để có được quân Vua là 1/13 vì có 13 khả năng: Át, Deuce, Ba,
+, Mười, Jack, Nữ hoàng, Vua và Át. Bây giờ, nếu chúng ta chia quân Vua cho quân bài đầu tiên và không thay nó vào bộ bài thì xác suất quân bài thứ hai trở thành quân Vua sẽ ít hơn vì chỉ còn lại ba quân Vua: xác suất là 3 trên 51. Những sự kiện này do đó không độc lập : kết quả đầu tiên ảnh hưởng đến kết quả tiếp theo.
+
+Để xem một trường hợp cực đoan của các sự kiện không độc lập, hãy xem xét ví dụ của chúng tôi về việc lấy ngẫu nhiên năm hạt mà không thay thế:
+```{r}
+x <- sample(beads, 5)
+```
+Nếu bạn phải đoán màu của hạt đầu tiên, bạn sẽ dự đoán màu xanh lam vì màu xanh lam có 60% cơ hội. Nhưng nếu tôi cho bạn xem kết quả của bốn kết quả cuối cùng:
+```{r}
+x[2:5]
+#> [1] "blue" "blue" "blue" "red"
+```
+bạn vẫn đoán màu xanh chứ? Dĩ nhiên là không. Bây giờ bạn biết rằng xác suất có màu đỏ là 1 vì hạt duy nhất còn lại có màu đỏ. Các sự kiện không độc lập nên xác suất thay đổi.
+
+3.6 Xác suất có điều kiện
+Khi các sự kiện không độc lập, xác suất có điều kiện rất hữu ích. Chúng ta đã thấy một ví dụ về xác suất có điều kiện: chúng ta đã tính xác suất để lá bài được chia thứ hai là Vua nếu lá bài đầu tiên là Vua. Trong xác suất, chúng tôi sử dụng ký hiệu sau:
+
+
+Chúng tôi sử dụng
+như cách viết tắt của “cho rằng” hoặc “có điều kiện”.
+
+Khi có hai sự kiện, nói
+Và
+, độc lập, ta có:
+
+
+Đây là cách nói toán học: thực tế là
+xảy ra không ảnh hưởng đến xác suất xảy ra
+đang xảy ra. Trên thực tế, đây có thể được coi là định nghĩa toán học về tính độc lập.
+
+3.7 Quy tắc cộng và nhân
+3.7.1 Quy tắc nhân
+Nếu chúng ta muốn biết xác suất của hai sự kiện, hãy nói
+Và
+, xảy ra, chúng ta có thể sử dụng quy tắc nhân:
+
+Hãy lấy Blackjack làm ví dụ. Trong Blackjack, bạn được chia hai lá bài ngẫu nhiên. Sau khi bạn thấy những gì bạn có, bạn có thể yêu cầu nhiều hơn. Mục tiêu là đến gần 21 hơn người chia bài mà không cần vượt qua. Các lá bài mặt có giá trị 10 điểm và quân Át có giá trị 11 hoặc 1 (bạn chọn).
+
+Vì vậy, trong trò chơi Blackjack, để tính cơ hội nhận được số 21 bằng cách rút một quân Át và sau đó là một quân bài mặt, chúng ta tính xác suất của quân Át đầu tiên và nhân với xác suất rút được một quân bài mặt hoặc một quân 10 cho trước đầu tiên là quân Át:
+
+Quy tắc nhân cũng áp dụng cho nhiều hơn hai sự kiện. Chúng ta có thể sử dụng quy nạp để mở rộng cho nhiều sự kiện hơn:
+
+
+3.7.2 Quy tắc nhân độc lập
+Khi chúng ta có các sự kiện độc lập thì quy tắc nhân trở nên đơn giản hơn:
+
+
+Nhưng chúng ta phải rất cẩn thận trước khi sử dụng điều này vì giả định tính độc lập có thể dẫn đến các phép tính xác suất rất khác và không chính xác khi chúng ta thực sự không có tính độc lập.
+
+Ví dụ, hãy tưởng tượng một phiên tòa trong đó nghi phạm được mô tả là có ria mép và râu. Bị cáo có ria mép và bên công tố mời một “chuyên gia” đến làm chứng rằng 1/10 nam giới có râu và 1/5 có ria mép nên dùng quy tắc nhân ta kết luận rằng chỉ
+hoặc 0,02 có cả hai.
+
+Nhưng để nhân lên như thế này chúng ta cần phải có sự độc lập! Giả sử xác suất có điều kiện để một người đàn ông có ria mép với điều kiện anh ta phải có râu là 0,95. Vì vậy xác suất tính toán đúng sẽ cao hơn nhiều:
+.
+
+Quy tắc nhân cũng cho chúng ta một công thức chung để tính xác suất có điều kiện:
+
+ 
+
+Để minh họa cách chúng tôi sử dụng các công thức và khái niệm này trong thực tế, chúng tôi sẽ sử dụng một số ví dụ liên quan đến trò chơi bài.
+
+3.7.3 Quy tắc cộng
+Quy tắc cộng cho chúng ta biết rằng:
+
+
+Quy tắc này rất trực quan: hãy nghĩ đến sơ đồ Venn. Nếu chúng ta chỉ cộng các xác suất, chúng ta sẽ đếm giao điểm hai lần nên chúng ta cần trừ một trường hợp.
+
+
+
+3.8 Tổ hợp và hoán vị
+Trong ví dụ đầu tiên, chúng ta tưởng tượng một chiếc bình có năm hạt. Xin nhắc lại, để tính toán phân bố xác suất của một lần rút thăm, chúng tôi chỉ cần liệt kê ra tất cả các khả năng. Có 5 và do đó, đối với mỗi sự kiện, chúng tôi đếm xem có bao nhiêu khả năng trong số này có liên quan đến sự kiện đó. Xác suất để chọn được một hạt màu xanh lam là 3/5 vì trong số năm kết quả có thể xảy ra, có ba kết quả là màu xanh lam.
+
+Đối với những trường hợp phức tạp hơn, việc tính toán không đơn giản như vậy. Ví dụ, xác suất để nếu tôi rút năm lá bài mà không thay thế thì tôi nhận được tất cả các lá bài giống nhau, cái được gọi là “xả” trong bài poker là bao nhiêu? Trong khóa học xác suất rời rạc, bạn học lý thuyết về cách thực hiện các phép tính này. Ở đây chúng tôi tập trung vào cách sử dụng mã R để tính toán câu trả lời.
+
+Đầu tiên, chúng ta hãy xây dựng một bộ bài. Để làm điều này, chúng ta sẽ sử dụng hàm expand.gridvà paste. Chúng ta sử dụng pasteđể tạo chuỗi bằng cách nối các chuỗi nhỏ hơn. Để làm điều này, chúng ta lấy số và chất của lá bài rồi tạo tên lá bài như sau:
+
+```{r}
+number <- "Three"
+suit <- "Hearts"
+paste(number, suit)
+#> [1] "Three Hearts"
+```
+pastecũng hoạt động trên các cặp vectơ thực hiện thao tác theo từng phần tử:
+```{r}
+paste(letters[1:5], as.character(1:5))
+#> [1] "a 1" "b 2" "c 3" "d 4" "e 5"
+```
+Hàm expand.gridcung cấp cho chúng ta tất cả sự kết hợp các phần tử của hai vectơ. Ví dụ: nếu bạn có quần xanh và đen và áo sơ mi trắng, xám và kẻ sọc, tất cả các kết hợp của bạn là:
+```{r}
+expand.grid(pants = c("blue", "black"), shirt = c("white", "grey", "plaid"))
+#>   pants shirt
+#> 1  blue white
+#> 2 black white
+#> 3  blue  grey
+#> 4 black  grey
+#> 5  blue plaid
+#> 6 black plaid
+```
+
+Đây là cách chúng tôi tạo ra một bộ bài:
+
+```{r}
+suits <- c("Diamonds", "Clubs", "Hearts", "Spades")
+numbers <- c("Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven", 
+             "Eight", "Nine", "Ten", "Jack", "Queen", "King")
+deck <- expand.grid(number = numbers, suit = suits)
+deck <- paste(deck$number, deck$suit)
+```
+
+Với bộ bài đã được xây dựng, chúng ta có thể kiểm tra kỹ xem xác suất xuất hiện quân Vua trong lá bài đầu tiên là 1/13 hay không bằng cách tính tỷ lệ các kết quả có thể xảy ra thỏa mãn điều kiện của chúng ta:
+```{r}
+kings <- paste("King", suits)
+mean(deck %in% kings)
+#> [1] 0.0769
+```
+Bây giờ, còn xác suất có điều kiện để lá bài thứ hai là Vua khi lá bài đầu tiên là Vua thì sao? Trước đó, chúng ta đã suy luận rằng nếu một Vua đã ra khỏi bộ bài và còn lại 51 quân thì xác suất này là 3/51. Hãy xác nhận bằng cách liệt kê ra tất cả các kết quả có thể xảy ra.
+
+Để làm điều này, chúng ta có thể sử dụng permutationshàm từ gói gtools . Đối với bất kỳ danh sách kích thước nào n, hàm này sẽ tính toán tất cả các kết hợp khác nhau mà chúng ta có thể nhận được khi chọn rcác mục. Dưới đây là tất cả các cách chúng ta có thể chọn hai số từ danh sách bao gồm 1,2,3:
+```{r}
+library(gtools)
+permutations(3, 2)
+#>      [,1] [,2]
+#> [1,]    1    2
+#> [2,]    1    3
+#> [3,]    2    1
+#> [4,]    2    3
+#> [5,]    3    1
+#> [6,]    3    2
+```
+Lưu ý rằng thứ tự quan trọng ở đây: 3,1 khác với 1,3. Ngoài ra, hãy lưu ý rằng (1,1), (2,2) và (3,3) không xuất hiện vì khi chúng ta chọn một số, số đó không thể xuất hiện lại.
+
+Tùy chọn, chúng ta có thể thêm một vectơ. Nếu bạn muốn xem năm số điện thoại bảy chữ số ngẫu nhiên trong số tất cả các số điện thoại có thể có (không lặp lại), bạn có thể nhập:
+```{r}
+all_phone_numbers <- permutations(10, 7, v = 0:9)
+n <- nrow(all_phone_numbers)
+index <- sample(n, 5)
+all_phone_numbers[index,]
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+#> [1,]    1    3    8    0    6    7    5
+#> [2,]    2    9    1    6    4    8    0
+#> [3,]    5    1    6    0    9    8    2
+#> [4,]    7    4    6    0    2    8    1
+#> [5,]    4    6    5    9    2    8    0
+```
+Thay vì sử dụng các số từ 1 đến 10 theo mặc định, nó sử dụng những gì chúng tôi cung cấp thông qua v: các chữ số từ 0 đến 9.
+
+Để tính toán tất cả các cách có thể, chúng ta có thể chọn hai thẻ khi thứ tự quan trọng, chúng ta gõ:
+```{r}
+hands <- permutations(52, 2, v = deck)
+```
+Đây là ma trận có hai cột và 2652 hàng. Với ma trận chúng ta có thể nhận được lá bài thứ nhất và thứ hai như thế này:
+```{r}
+first_card <- hands[,1]
+second_card <- hands[,2]
+```
+Bây giờ các trường hợp mà tay đầu tiên là Vua có thể được tính như sau:
+```{r}
+kings <- paste("King", suits)
+sum(first_card %in% kings)
+#> [1] 204
+```
+Để có được xác suất có điều kiện, chúng tôi tính toán xem phần nào trong số này có quân Vua ở lá bài thứ hai:
+```{r}
+sum(first_card %in% kings & second_card %in% kings) / 
+  sum(first_card %in% kings)
+#> [1] 0.0588
+```
+chính xác là 3/51, như chúng ta đã suy luận. Lưu ý rằng đoạn mã trên tương đương với:
+```{r}
+mean(first_card %in% kings & second_card %in% kings) / 
+  mean(first_card %in% kings)
+#> [1] 0.0588
+```
+sử dụng meanthay vì sumvà là phiên bản R của:
+
+ 
+
+Còn nếu thứ tự không quan trọng thì sao? Ví dụ: trong Blackjack nếu bạn nhận được quân Át và quân bài mặt trong lần rút đầu tiên, nó được gọi là Natural 21 và bạn sẽ tự động thắng. Nếu chúng ta muốn tính xác suất xảy ra điều này, chúng ta sẽ liệt kê các kết hợp chứ không phải các hoán vị vì thứ tự không quan trọng.
+```{r}
+combinations(3,2)
+#>      [,1] [,2]
+#> [1,]    1    2
+#> [2,]    1    3
+#> [3,]    2    3
+```
+Ở dòng thứ hai, kết quả không bao gồm (2,1) vì (1,2) đã được liệt kê. Điều tương tự cũng áp dụng cho (3,1) và (3,2).
+
+Vì vậy, để tính xác suất của Tự nhiên 21 trong Blackjack, chúng ta có thể làm điều này:
+```{r}
+aces <- paste("Ace", suits)
+
+facecard <- c("King", "Queen", "Jack", "Ten")
+facecard <- expand.grid(number = facecard, suit = suits)
+facecard <- paste(facecard$number, facecard$suit)
+
+hands <- combinations(52, 2, v = deck)
+mean(hands[,1] %in% aces & hands[,2] %in% facecard)
+#> [1] 0.0483
+```
+Ở dòng cuối cùng, chúng tôi giả sử quân Át đến trước. Điều này chỉ là do chúng ta biết cách combinationliệt kê các khả năng và nó sẽ liệt kê trường hợp này đầu tiên. Nhưng để an toàn, chúng ta có thể viết câu này và đưa ra câu trả lời tương tự:
+```{r}
+mean((hands[,1] %in% aces & hands[,2] %in% facecard) |
+       (hands[,2] %in% aces & hands[,1] %in% facecard))
+#> [1] 0.0483
+```
+3.8.1 Ví dụ Monte Carlo
+Thay vì sử dụng combinationsđể suy ra xác suất chính xác của số 21 tự nhiên, chúng ta có thể sử dụng Monte Carlo để ước tính xác suất này. Trong trường hợp này, chúng ta rút đi rút lại hai lá bài và theo dõi xem chúng ta nhận được bao nhiêu số 21. Chúng ta có thể sử dụng hàm mẫu để rút hai lá bài mà không cần thay thế:
+```{r}
+hand <- sample(deck, 2)
+hand
+#> [1] "Queen Clubs"  "Seven Spades"
+```
+Sau đó kiểm tra xem một quân bài là Át và quân còn lại là quân bài mặt hay quân 10. Về sau, chúng ta bao gồm 10 khi nói quân bài mặt . Bây giờ chúng ta cần kiểm tra cả hai khả năng:
+```{r}
+(hands[1] %in% aces & hands[2] %in% facecard) | 
+  (hands[2] %in% aces & hands[1] %in% facecard)
+#> [1] FALSE
+```
+Nếu chúng ta lặp lại điều này 10.000 lần, chúng ta sẽ có được ước tính rất tốt về xác suất của số 21 tự nhiên.
+
+Hãy bắt đầu bằng cách viết một hàm vẽ một bàn tay và trả về TRUE nếu chúng ta nhận được 21. Hàm này không cần bất kỳ đối số nào vì nó sử dụng các đối tượng được xác định trong môi trường toàn cục.
+```{r}
+blackjack <- function(){
+   hand <- sample(deck, 2)
+  (hand[1] %in% aces & hand[2] %in% facecard) | 
+    (hand[2] %in% aces & hand[1] %in% facecard)
+}
+```
+Ở đây chúng ta phải kiểm tra cả hai khả năng: Át đầu tiên hoặc Át thứ hai vì chúng ta không sử dụng combinationschức năng này. Hàm trả về TRUEnếu chúng ta nhận được 21 và FALSEngược lại:
+```{r}
+blackjack()
+#> [1] FALSE
+```
+Bây giờ chúng ta có thể chơi trò chơi này, chẳng hạn như 10.000 lần:
+```{r}
+B <- 10000
+results <- replicate(B, blackjack())
+mean(results)
+#> [1] 0.0475
+```
+3.9 Ví dụ
+Trong phần này, chúng tôi mô tả hai ví dụ phổ biến về xác suất rời rạc: bài toán Monty Hall và bài toán sinh nhật. Chúng tôi sử dụng R để giúp minh họa các khái niệm toán học.
+
+3.9.1 Bài toán Monty Hall
+Vào những năm 1970, có một game show mang tên “Let's Make a Deal” và Monty Hall là người dẫn chương trình. Tại một thời điểm nào đó của trò chơi, các thí sinh được yêu cầu chọn một trong ba cánh cửa. Đằng sau một cánh cửa có một giải thưởng. Các cửa còn lại có một con dê đằng sau để chỉ thí sinh mà họ đã thua. Sau khi thí sinh chọn một cánh cửa, trước khi tiết lộ liệu cánh cửa được chọn có giải thưởng hay không, Monty Hall sẽ mở một trong hai cánh cửa còn lại và cho thí sinh thấy phía sau cánh cửa đó không có giải thưởng. Sau đó anh ấy sẽ hỏi "Bạn có muốn đổi cửa không?" Bạn sẽ làm gì?
+
+Chúng tôi có thể sử dụng xác suất để chứng minh rằng nếu bạn vẫn giữ nguyên lựa chọn cửa ban đầu thì cơ hội trúng giải của bạn vẫn là 1 trên 3. Tuy nhiên, nếu bạn chuyển sang cửa khác, cơ hội thắng của bạn sẽ tăng gấp đôi lên 2 trên 3! Điều này có vẻ phản trực giác. Nhiều người nghĩ sai rằng cả hai cơ hội đều là 1 trên 2 vì bạn đang lựa chọn giữa 2 phương án. Bạn có thể xem phần giải thích toán học chi tiết trên Khan Academy 2 hoặc đọc trên Wikipedia 3 . Dưới đây chúng tôi sử dụng mô phỏng Monte Carlo để xem chiến lược nào tốt hơn. Lưu ý rằng mã này được viết dài hơn mức cần thiết cho mục đích sư phạm.
+
+Hãy bắt đầu với chiến lược cây gậy:
+```{r}
+B <- 10000
+monty_hall <- function(strategy){
+  doors <- as.character(1:3)
+  prize <- sample(c("car", "goat", "goat"))
+  prize_door <- doors[prize == "car"]
+  my_pick  <- sample(doors, 1)
+  show <- sample(doors[!doors %in% c(my_pick, prize_door)],1)
+  stick <- my_pick
+  stick == prize_door
+  switch <- doors[!doors%in%c(my_pick, show)]
+  choice <- ifelse(strategy == "stick", stick, switch)
+  choice == prize_door
+}
+stick <- replicate(B, monty_hall("stick"))
+mean(stick)
+#> [1] 0.342
+switch <- replicate(B, monty_hall("switch"))
+mean(switch)
+#> [1] 0.668
+```
+Khi chúng tôi viết mã, chúng tôi lưu ý rằng các dòng bắt đầu bằng my_pickvà showkhông có ảnh hưởng đến thao tác logic cuối cùng khi chúng tôi vẫn giữ nguyên lựa chọn ban đầu của mình. Từ đó chúng ta nên nhận ra rằng cơ hội là 1 trên 3, như những gì chúng ta đã bắt đầu. Khi chúng ta chuyển đổi, ước tính Monte Carlo xác nhận phép tính 2/3. Điều này giúp chúng ta hiểu rõ hơn bằng cách cho thấy rằng chúng ta đang loại bỏ một cánh cửa showchắc chắn không phải là người chiến thắng trong các lựa chọn của chúng ta. Chúng tôi cũng thấy rằng trừ khi chúng tôi làm đúng khi chọn lần đầu, bạn sẽ thắng: 1 - 1/3 = 2/3.
+
+3.9.2 Vấn đề sinh nhật
+Giả sử bạn đang ở trong một lớp học có 50 người. Nếu chúng ta giả sử đây là một nhóm được chọn ngẫu nhiên gồm 50 người thì khả năng có ít nhất hai người có cùng ngày sinh là bao nhiêu? Mặc dù nó có phần tiên tiến hơn nhưng chúng ta có thể suy luận điều này về mặt toán học. Chúng ta sẽ làm điều này sau. Ở đây chúng tôi sử dụng mô phỏng Monte Carlo. Để đơn giản, chúng tôi giả sử không có ai sinh vào ngày 29 tháng 2. Điều này thực ra không làm thay đổi nhiều câu trả lời.
+
+Đầu tiên, lưu ý rằng ngày sinh nhật có thể được biểu thị dưới dạng số từ 1 đến 365, do đó, có thể lấy mẫu 50 ngày sinh nhật như sau:
+```{r}
+n <- 50
+bdays <- sample(1:365, n, replace = TRUE)
+```
+
+Để kiểm tra xem trong nhóm 50 người cụ thể này, chúng ta có ít nhất hai người có cùng ngày sinh hay không, chúng ta có thể sử dụng hàm duplicated, hàm này trả về TRUEbất cứ khi nào một phần tử của vectơ bị trùng lặp. Đây là một ví dụ:
+```{r}
+duplicated(c(1, 2, 3, 1, 4, 3, 5))
+#> [1] FALSE FALSE FALSE  TRUE FALSE  TRUE FALSE
+```
+Lần thứ hai 1 và 3 xuất hiện, chúng ta nhận được TRUE. Vì vậy, để kiểm tra xem hai ngày sinh nhật có giống nhau hay không, chúng ta chỉ cần sử dụng các hàm anyvà duplicatednhư thế này:
+```{r}
+any(duplicated(bdays))
+#> [1] TRUE
+```
+Trong trường hợp này, chúng tôi thấy rằng nó đã xảy ra. Ít nhất có hai người có cùng ngày sinh.
+
+Để ước tính xác suất có cùng một ngày sinh trong nhóm, chúng tôi lặp lại thí nghiệm này bằng cách lấy mẫu lặp đi lặp lại các tập hợp gồm 50 ngày sinh:
+```{r}
+B <- 10000
+same_birthday <- function(n){
+  bdays <- sample(1:365, n, replace = TRUE)
+  any(duplicated(bdays))
+}
+results <- replicate(B, same_birthday(50))
+mean(results)
+#> [1] 0.969
+```
+Bạn có mong đợi xác suất sẽ cao như vậy không?
+
+Mọi người có xu hướng đánh giá thấp những xác suất này. Để có trực giác tại sao nó lại cao như vậy, hãy nghĩ về điều gì sẽ xảy ra khi quy mô nhóm gần bằng 365. Ở giai đoạn này, chúng ta không còn nhiều ngày và xác suất là một.
+
+Giả sử chúng ta muốn sử dụng kiến ​​thức này để đặt cược với bạn bè về việc hai người có cùng ngày sinh trong một nhóm người. Khi nào cơ hội lớn hơn 50%? Lớn hơn 75%?
+
+Hãy tạo một bảng tra cứu. Chúng ta có thể nhanh chóng tạo một hàm để tính toán giá trị này cho bất kỳ quy mô nhóm nào:
+```{r}
+compute_prob <- function(n, B = 10000){
+  results <- replicate(B, same_birthday(n))
+  mean(results)
+}
+```
+
+Sử dụng hàm sapply, chúng ta có thể thực hiện các thao tác theo phần tử trên bất kỳ hàm nào:
+```{r}
+n <- seq(1,60)
+prob <- sapply(n, compute_prob)
+```
+
+Bây giờ chúng ta có thể vẽ đồ thị xác suất ước tính của hai người có cùng ngày sinh trong một nhóm có quy mô
+:
+```{r}
+library(tidyverse)
+prob <- sapply(n, compute_prob)
+qplot(n, prob)
+```
+Bây giờ hãy tính xác suất chính xác thay vì sử dụng phép tính gần đúng Monte Carlo. Chúng tôi không chỉ nhận được câu trả lời chính xác bằng toán học mà còn tính toán nhanh hơn nhiều vì chúng tôi không phải tạo ra các thí nghiệm.
+
+Để làm cho phép toán đơn giản hơn, thay vì tính xác suất để điều đó xảy ra, chúng ta sẽ tính xác suất để điều đó không xảy ra. Để làm điều này, chúng tôi sử dụng quy tắc nhân.
+
+Hãy bắt đầu với người đầu tiên. Xác suất để người 1 có ngày sinh duy nhất là 1. Xác suất để người 2 có ngày sinh duy nhất, vì người 1 đã có một ngày sinh duy nhất, là 364/365. Sau đó, vì hai người đầu tiên có ngày sinh nhật khác nhau nên người thứ 3 có 363 ngày để lựa chọn. Chúng ta tiếp tục theo cách này và tìm khả năng để tất cả 50 người có một ngày sinh nhật độc nhất là:
+
+Chúng ta có thể viết một hàm thực hiện điều này với bất kỳ số nào:
+```{r}
+exact_prob <- function(n){
+  prob_unique <- seq(365,365 - n + 1)/365 
+  1 - prod( prob_unique)
+}
+eprob <- sapply(n, exact_prob)
+qplot(n, prob) + geom_line(aes(n, eprob), col = "red")
+```
+Biểu đồ này cho thấy mô phỏng Monte Carlo đã đưa ra ước tính rất tốt về xác suất chính xác. Nếu không thể tính toán các xác suất chính xác thì chúng ta vẫn có thể ước tính chính xác các xác suất.
+
+3.10 Vô cực trong thực tế
+Lý thuyết được mô tả ở đây đòi hỏi phải lặp đi lặp lại các thí nghiệm mãi mãi. Trong thực tế, chúng tôi không thể làm điều này. Trong các ví dụ trên, chúng tôi đã sử dụng
+Các thí nghiệm ở Monte Carlo và hóa ra điều này mang lại những ước tính chính xác. Con số này càng lớn thì ước tính càng chính xác cho đến khi giá trị gần đúng tốt đến mức máy tính của bạn không thể phân biệt được. Nhưng trong những phép tính phức tạp hơn, 10.000 có thể gần như không đủ. Ngoài ra, đối với một số phép tính, 10.000 thí nghiệm có thể không khả thi về mặt tính toán. Trong thực tế, chúng ta không biết câu trả lời là gì, vì vậy chúng ta sẽ không biết liệu ước tính Monte Carlo của mình có chính xác hay không. Chúng ta biết rằng càng lớn
+, sự gần đúng càng tốt. Nhưng chúng ta cần nó lớn đến mức nào? Đây thực sự là một câu hỏi đầy thách thức và việc trả lời nó thường đòi hỏi phải đào tạo thống kê lý thuyết nâng cao.
+
+Một cách tiếp cận thực tế mà chúng tôi sẽ mô tả ở đây là kiểm tra tính ổn định của ước lượng. Sau đây là một ví dụ về bài toán sinh nhật của một nhóm 25 người.
+```{r}
+B <- 10^seq(1, 5, len = 100)
+compute_prob <- function(B, n=25){
+  same_day <- replicate(B, same_birthday(n))
+  mean(same_day)
+}
+prob <- sapply(B, compute_prob)
+plot(log10(B), prob)
+```
+Trong biểu đồ này, chúng ta có thể thấy rằng các giá trị bắt đầu ổn định (nghĩa là chúng thay đổi nhỏ hơn 0,01) vào khoảng 1000. Lưu ý rằng xác suất chính xác mà chúng ta biết trong trường hợp này là 0,5686997.
+4   Xác suất liên tục
+Trong Phần 1.2 , chúng tôi đã giải thích lý do tại sao khi tóm tắt danh sách các giá trị số, chẳng hạn như chiều cao, việc xây dựng một phân phối xác định tỷ lệ cho từng kết quả có thể xảy ra là không hữu ích. Tương tự, đối với một biến ngẫu nhiên có thể nhận bất kỳ giá trị nào trong một tập hợp liên tục, không thể gán xác suất dương cho vô số giá trị có thể có. Ở đây chúng tôi mô tả cách chúng tôi xác định một cách toán học các phân bố cho các biến ngẫu nhiên liên tục và các phép tính gần đúng hữu ích thường được sử dụng trong phân tích dữ liệu.
+
+4.1 Hàm phân phối tích lũy
+Chúng tôi lấy chiều cao của học sinh nam trưởng thành làm ví dụ
+```{r}
+library(tidyverse)
+library(dslabs)
+x <- heights %>% filter(sex=="Male") %>% pull(height)
+```
+và định nghĩa hàm phân phối tích lũy theo kinh nghiệm (eCDF) là
+```{r}
+F <- function(a) mean(x <= a)
+```
+
+mà đối với bất kỳ giá trị nào a, sẽ đưa ra tỷ lệ các giá trị trong danh sách xnhỏ hơn hoặc bằng a.
+
+Hãy kết nối eCDF với xác suất bằng cách hỏi: nếu tôi chọn ngẫu nhiên một trong số các nam sinh, khả năng anh ta cao hơn 70,5 inch là bao nhiêu? Bởi vì mọi học sinh đều có cơ hội được chọn như nhau nên câu trả lời cho câu hỏi này tương đương với tỷ lệ học sinh cao hơn 70,5 inch. Sử dụng eCDF, chúng tôi nhận được câu trả lời bằng cách gõ:
+```{r}
+1 - F(70)
+#> [1] 0.377
+```
+CDF là một phiên bản của eCDF gán các xác suất lý thuyết cho mỗi
+thay vì tỷ lệ được tính toán từ dữ liệu. Mặc dù, như chúng tôi vừa chứng minh, các tỷ lệ được tính toán từ dữ liệu có thể được sử dụng để xác định xác suất cho một biến ngẫu nhiên. Cụ thể là CDF cho kết quả ngẫu nhiên
+định nghĩa, cho bất kỳ số nào
+, xác suất quan sát được một giá trị lớn hơn
+.
+
+
+Khi CDF được xác định, chúng ta có thể sử dụng nó để tính xác suất của bất kỳ tập hợp con giá trị nào. Chẳng hạn, xác suất để một học sinh nằm giữa chiều cao avà chiều cao blà:
+
+
+Vì chúng ta có thể tính xác suất cho bất kỳ sự kiện có thể xảy ra nào theo cách này nên CDF xác định phân bố xác suất.
+
+4.2 Hàm mật độ xác suất
+Một kết quả toán học thực sự rất hữu ích trong thực tế là đối với hầu hết các CDF, chúng ta có thể định nghĩa một hàm, gọi nó là
+, điều đó cho phép chúng ta xây dựng CDF bằng Giải tích, như thế này:
+
+được gọi là hàm mật độ xác suất . Trực giác cho thấy ngay cả đối với các kết quả liên tục, chúng ta có thể xác định các khoảng nhỏ, gần như nhỏ bằng điểm, có xác suất dương. Nếu chúng ta coi kích thước của các khoảng này là đáy của hình chữ nhật thì hàm mật độ xác suất
+xác định chiều cao của hình chữ nhật sao cho tổng diện tích của các hình chữ nhật này gần đúng với xác suất
+. Tổng này có thể được viết dưới dạng tổng Reimann được tính gần đúng bằng tích phân:
+
+
+
+Một ví dụ về phân phối liên tục như vậy là phân phối chuẩn. Như chúng ta đã thấy trong Phần 1.5 , hàm mật độ xác suất được cho bởi:
+
+ 
+ 
+
+Phân phối tích lũy cho phân phối chuẩn được xác định bằng công thức toán học mà trong R có thể thu được bằng hàm pnorm. Chúng ta nói rằng một đại lượng ngẫu nhiên có phân phối chuẩn với độ lệch trung bình mvà độ lệch chuẩn snếu phân bố xác suất của nó được xác định bởi:
+```{r}
+F(a) = pnorm(a, m, s)
+```
+Điều này rất hữu ích vì nếu chúng ta sẵn sàng sử dụng phép tính gần đúng thông thường cho chiều cao, chẳng hạn, chúng ta không cần toàn bộ tập dữ liệu để trả lời các câu hỏi như: xác suất để một học sinh được chọn ngẫu nhiên cao hơn 70 inch là bao nhiêu? Chúng ta chỉ cần chiều cao trung bình và độ lệch chuẩn:
+```{r}
+m <- mean(x)
+s <- sd(x)
+1 - pnorm(70.5, m, s)
+#> [1] 0.371
+```
+4.3 Phân bố lý thuyết gần đúng
+Phân phối chuẩn có nguồn gốc toán học: chúng ta không cần dữ liệu để xác định nó. Đối với các nhà khoa học dữ liệu thực hành, hầu hết mọi việc chúng tôi làm đều liên quan đến dữ liệu. Về mặt kỹ thuật, dữ liệu luôn luôn rời rạc. Ví dụ: chúng ta có thể coi dữ liệu chiều cao của mình được phân loại với mỗi chiều cao cụ thể là một danh mục duy nhất. Phân phối xác suất được xác định bởi tỷ lệ học sinh báo cáo từng chiều cao. Đây là biểu đồ phân bố xác suất đó:
+
+
+
+Trong khi hầu hết học sinh làm tròn chiều cao của mình đến inch gần nhất, những học sinh khác báo cáo giá trị chính xác hơn. Một học sinh cho biết chiều cao của mình là 69,6850393700787, tức là 177 cm. Xác suất được ấn định cho chiều cao này là 0,0012315 hoặc 1 trên 812. Xác suất cho 70 inch cao hơn nhiều là 0,1059113, nhưng liệu có thực sự hợp lý khi coi xác suất chính xác là 70 inch khác với 69,6850393700787? Rõ ràng sẽ hữu ích hơn nhiều cho mục đích phân tích dữ liệu nếu coi kết quả này là một biến số liên tục, hãy nhớ rằng rất ít người, hoặc có lẽ không ai, cao chính xác là 70 inch và lý do chúng ta nhận được nhiều giá trị hơn ở mức 70 là vì mọi người tròn đến inch gần nhất.
+
+Với phân phối liên tục, xác suất của một giá trị số ít thậm chí không được xác định. Ví dụ, sẽ không có ý nghĩa gì nếu hỏi xác suất để giá trị được phân phối chuẩn là 70 là bao nhiêu. Thay vào đó, chúng ta xác định xác suất cho các khoảng. Do đó, chúng ta có thể hỏi xác suất để một người nào đó nằm trong khoảng từ 69,5 đến 70,5 là bao nhiêu.
+
+Trong các trường hợp như chiều cao, trong đó dữ liệu được làm tròn, phép tính gần đúng thông thường đặc biệt hữu ích nếu chúng ta xử lý các khoảng bao gồm chính xác một số làm tròn. Ví dụ: phân phối chuẩn rất hữu ích để ước tính tỷ lệ học sinh báo cáo các giá trị trong các khoảng như ba khoảng thời gian sau:
+```{r}
+mean(x <= 68.5) - mean(x <= 67.5)
+#> [1] 0.115
+mean(x <= 69.5) - mean(x <= 68.5)
+#> [1] 0.119
+mean(x <= 70.5) - mean(x <= 69.5)
+#> [1] 0.122
+```
+Lưu ý mức độ gần đúng của chúng ta với phép tính gần đúng thông thường:
+```{r}
+pnorm(68.5, m, s) - pnorm(67.5, m, s) 
+#> [1] 0.103
+pnorm(69.5, m, s) - pnorm(68.5, m, s) 
+#> [1] 0.11
+pnorm(70.5, m, s) - pnorm(69.5, m, s) 
+#> [1] 0.108
+```
+Tuy nhiên, phép tính gần đúng không hữu ích cho các khoảng thời gian khác. Ví dụ: hãy chú ý cách phân tích phép tính gần đúng khi chúng ta cố gắng ước tính
+```{r}
+mean(x <= 70.9) - mean(x<=70.1)
+#> [1] 0.0222
+```
+với
+```{r}
+pnorm(70.9, m, s) - pnorm(70.1, m, s)
+#> [1] 0.0836
+```
+Nói chung, chúng tôi gọi tình huống này là rời rạc hóa . Mặc dù sự phân bố chiều cao thực là liên tục, chiều cao được báo cáo có xu hướng phổ biến hơn ở các giá trị rời rạc, trong trường hợp này là do làm tròn. Miễn là chúng ta biết cách đối phó với thực tế này thì phép tính gần đúng thông thường vẫn có thể là một công cụ rất hữu ích.
+
+4.4 Mật độ xác suất
+Đối với phân phối phân loại, chúng ta có thể xác định xác suất của một danh mục. Ví dụ như tung xúc xắc, hãy gọi nó là
+, có thể là 1, 2, 3, 4, 5 hoặc 6. Xác suất của 4 được xác định như sau:
+
+
+CDF sau đó có thể được xác định dễ dàng:
+
+Mặc dù đối với phân phối liên tục xác suất của một giá trị duy nhất
+không được định nghĩa, có một định nghĩa lý thuyết có cách giải thích tương tự. Mật độ xác suất tại
+được định nghĩa là hàm
+như vậy mà:
+
+
+Đối với những người biết phép tính, hãy nhớ rằng tích phân có liên quan đến một tổng: nó là tổng của các thanh có chiều rộng xấp xỉ 0. Nếu bạn không biết phép tính, bạn có thể nghĩ đến
+như một đường cong mà diện tích bên dưới đường cong đó đạt đến giá trị
+, cho bạn xác suất
+.
+
+Ví dụ: để sử dụng phép tính gần đúng thông thường để ước tính xác suất một người nào đó cao hơn 76 inch, chúng tôi sử dụng:
+```{r}
+1 - pnorm(76, m, s)
+#> [1] 0.0321
+```
+về mặt toán học là vùng màu xám bên dưới:
+
+
+
+Đường cong bạn nhìn thấy là mật độ xác suất của phân bố chuẩn. Trong R, chúng ta có được điều này bằng cách sử dụng hàm dnorm.
+
+Mặc dù có thể không rõ ràng ngay tại sao việc biết về mật độ xác suất lại hữu ích, nhưng việc hiểu khái niệm này sẽ rất cần thiết đối với những người muốn khớp các mô hình với dữ liệu mà các hàm được xác định trước không có sẵn.
+
+4.5 Monte Carlo
+R cung cấp các chức năng để tạo ra các kết quả có phân phối chuẩn. Cụ thể, rnormhàm nhận ba đối số: kích thước, trung bình (mặc định là 0) và độ lệch chuẩn (mặc định là 1) và tạo ra các số ngẫu nhiên. Dưới đây là ví dụ về cách chúng tôi có thể tạo dữ liệu giống như chiều cao được báo cáo của chúng tôi:
+```{r}
+n <- length(x)
+m <- mean(x)
+s <- sd(x)
+simulated_heights <- rnorm(n, m, s)
+```
+Không có gì ngạc nhiên khi sự phân phối có vẻ bình thường:
+
+
+
+Đây là một trong những hàm hữu ích nhất trong R vì nó sẽ cho phép chúng ta tạo dữ liệu mô phỏng các sự kiện tự nhiên và trả lời các câu hỏi liên quan đến những gì có thể xảy ra tình cờ bằng cách chạy mô phỏng Monte Carlo.
+
+Ví dụ: nếu chúng ta chọn ngẫu nhiên 800 nam giới thì người cao nhất sẽ được phân bổ như thế nào? Một người bảy chân trong một nhóm 800 nam giới hiếm đến mức nào? Mô phỏng Monte Carlo sau đây giúp chúng ta trả lời câu hỏi đó:
+```{r}
+B <- 10000
+tallest <- replicate(B, {
+  simulated_data <- rnorm(800, m, s)
+  max(simulated_data)
+})
+```
+Có bảy chân trang là khá hiếm:
+```{r}
+mean(tallest >= 7*12)
+#> [1] 0.0156
+```
+Đây là kết quả phân phối:
+
+
+
+Lưu ý rằng nó trông không bình thường.
+
+4.6 Phân phối liên tục
+Phân phối chuẩn không phải là phân phối lý thuyết hữu ích duy nhất. Các phân phối liên tục khác mà chúng ta có thể gặp phải là phân phối t-student, Chi bình phương, hàm mũ, gamma, beta và beta-nhị phân. R cung cấp các hàm để tính toán mật độ, lượng tử, hàm phân phối tích lũy và tạo mô phỏng Monte Carlo. R sử dụng quy ước cho phép chúng ta nhớ tên, cụ thể là sử dụng các chữ cái d, q, pvà rtrước một cách viết tắt để phân phối. Chúng ta đã thấy các hàm dnorm, pnormvà rnormđối với phân phối chuẩn. Các hàm qnormcung cấp cho chúng ta các lượng tử. Do đó chúng ta có thể vẽ một phân phối như thế này:
+```{r}
+x <- seq(-4, 4, length.out = 100)
+qplot(x, f, geom = "line", data = data.frame(x, f = dnorm(x)))
+```
+Đối với sinh viên-t, được mô tả sau trong Phần 10.2.3 , cách viết tắt tđược sử dụng để các hàm dtdành cho mật độ, qtlượng tử, pthàm phân phối tích lũy và rtmô phỏng Monte Carlo.
+
+4.7 Bài tập
+1. Giả sử phân bố chiều cao của phụ nữ gần đúng bằng phân phối chuẩn với giá trị trung bình là 64 inch và độ lệch chuẩn là 3 inch. Nếu chúng ta chọn ngẫu nhiên một phụ nữ, xác suất cô ấy cao 5 feet hoặc thấp hơn là bao nhiêu?
+
+2. Giả sử phân bố chiều cao của phụ nữ gần đúng bằng phân phối chuẩn với giá trị trung bình là 64 inch và độ lệch chuẩn là 3 inch. Nếu chúng ta chọn ngẫu nhiên một người phụ nữ, xác suất để cô ấy cao 6 feet hoặc cao hơn là bao nhiêu?
+
+3. Giả sử phân bố chiều cao của phụ nữ gần đúng bằng phân phối chuẩn với giá trị trung bình là 64 inch và độ lệch chuẩn là 3 inch. Nếu chúng ta chọn ngẫu nhiên một phụ nữ, xác suất để cô ấy cao từ 61 đến 67 inch là bao nhiêu?
+
+4. Lặp lại bài tập trên nhưng chuyển đổi mọi thứ thành cm. Nghĩa là nhân mọi chiều cao, bao gồm cả độ lệch chuẩn, với 2,54. Câu trả lời bây giờ là gì?
+
+5. Lưu ý rằng câu trả lời cho câu hỏi không thay đổi khi bạn đổi đơn vị. Điều này có ý nghĩa vì độ lệch chuẩn so với mức trung bình của một mục trong danh sách không bị ảnh hưởng bởi đơn vị chúng tôi sử dụng. Trên thực tế, nếu bạn nhìn kỹ, bạn sẽ nhận thấy rằng 61 và 67 đều cách mức trung bình 1 SD. Tính xác suất để một biến ngẫu nhiên có phân phối chuẩn, được chọn ngẫu nhiên nằm trong khoảng 1 SD so với mức trung bình.
+
+6. Để xem phép toán giải thích tại sao câu trả lời cho câu hỏi 3, 4 và 5 giống nhau, giả sử chúng ta có một biến ngẫu nhiên có giá trị trung bình
+và sai số chuẩn
+. Giả sử chúng ta hỏi xác suất của
+nhỏ hơn hoặc bằng
+. Hãy nhớ rằng, theo định nghĩa,
+là
+độ lệch chuẩn
+cách xa mức trung bình
+. Xác suất là:
+
+
+Bây giờ chúng ta trừ
+sang cả hai bên rồi chia cả hai bên cho
+:
+
+ 
+ 
+
+Đại lượng bên trái là một biến ngẫu nhiên chuẩn tắc tiêu chuẩn. Nó có trung bình là 0 và sai số chuẩn là 1. Chúng ta sẽ gọi nó là
+:
+
+ 
+
+Vì vậy, bất kể đơn vị là gì, xác suất của
+giống như xác suất của một biến thông thường tiêu chuẩn nhỏ hơn
+. Nếu mulà giá trị trung bình và sigmalỗi tiêu chuẩn, mã R nào sau đây sẽ cho chúng ta câu trả lời đúng trong mọi tình huống:
+
+mean(X<=a)
+pnorm((a - m)/s)
+pnorm((a - m)/s, m, s)
+pnorm(a)
+7. Hãy tưởng tượng sự phân bổ của nam giới trưởng thành là gần như bình thường với giá trị kỳ vọng là 69 và độ lệch chuẩn là 3. Nam giới ở phân vị thứ 99 cao bao nhiêu? Gợi ý: sử dụng qnorm.
+
+8. Sự phân bố điểm IQ gần như được phân phối chuẩn. Giá trị trung bình là 100 và độ lệch chuẩn là 15. Giả sử bạn muốn biết sự phân bổ chỉ số IQ cao nhất trong tất cả các lớp tốt nghiệp nếu mỗi lớp có 10.000 người sinh ra trong khu học chánh của bạn. Chạy mô phỏng Monte Carlo với B=1000việc tạo ra 10.000 điểm IQ và giữ mức cao nhất. Tạo một biểu đồ.
+5   biến ngẫu nhiên
+Trong khoa học dữ liệu, chúng ta thường xử lý dữ liệu bị ảnh hưởng ngẫu nhiên theo một cách nào đó: dữ liệu đến từ một mẫu ngẫu nhiên, dữ liệu bị ảnh hưởng bởi lỗi đo lường hoặc dữ liệu đo lường một số kết quả có tính chất ngẫu nhiên. Có thể định lượng độ không đảm bảo do tính ngẫu nhiên gây ra là một trong những công việc quan trọng nhất của nhà phân tích dữ liệu. Suy luận thống kê cung cấp một khuôn khổ cũng như một số công cụ thực tế để thực hiện việc này. Bước đầu tiên là học cách mô tả toán học các biến ngẫu nhiên.
+
+Trong chương này, chúng tôi giới thiệu các biến ngẫu nhiên và tính chất của chúng bắt đầu từ việc áp dụng chúng vào trò chơi may rủi. Sau đó chúng tôi mô tả một số sự kiện xung quanh cuộc khủng hoảng tài chính 2007-20081 bằng lý thuyết xác suất. Cuộc khủng hoảng tài chính này một phần là do đánh giá thấp rủi ro của một số chứng khoán nhất định do các tổ chức tài chính bán ra. Cụ thể, rủi ro của chứng khoán đảm bảo bằng thế chấp (MBS) và nghĩa vụ nợ có thế chấp (CDO) đã bị đánh giá thấp một cách quá mức. Những tài sản này được bán với mức giá giả định rằng hầu hết các chủ nhà sẽ thanh toán hàng tháng và xác suất điều này không xảy ra được tính là thấp. Sự kết hợp của nhiều yếu tố đã dẫn đến nhiều vụ vỡ nợ hơn dự kiến, dẫn đến sự sụt giảm giá của các chứng khoán này. Kết quả là các ngân hàng mất quá nhiều tiền đến mức họ cần sự cứu trợ của chính phủ để tránh phải đóng cửa hoàn toàn.
+
+5.1 Biến ngẫu nhiên
+Biến ngẫu nhiên là kết quả số do các quá trình ngẫu nhiên tạo ra. Chúng ta có thể dễ dàng tạo các biến ngẫu nhiên bằng cách sử dụng một số ví dụ đơn giản mà chúng tôi đã trình bày. Ví dụ: xác định Xlà 1 nếu hạt có màu xanh và đỏ nếu không:
+```{r}
+beads <- rep( c("red", "blue"), times = c(2,3))
+X <- ifelse(sample(beads, 1) == "blue", 1, 0)
+```
+Đây Xlà một biến ngẫu nhiên: mỗi lần chúng ta chọn một hạt mới thì kết quả sẽ thay đổi ngẫu nhiên. Xem bên dưới:
+```{r}
+ifelse(sample(beads, 1) == "blue", 1, 0)
+#> [1] 1
+ifelse(sample(beads, 1) == "blue", 1, 0)
+#> [1] 0
+ifelse(sample(beads, 1) == "blue", 1, 0)
+#> [1] 0
+```
+Đôi khi là 1 và đôi khi là 0.
+
+5.2 Mô hình lấy mẫu
+Nhiều quy trình tạo dữ liệu, những quy trình tạo ra dữ liệu mà chúng tôi nghiên cứu, có thể được mô hình hóa khá tốt như lấy từ một chiếc bình. Ví dụ: chúng ta có thể lập mô hình quá trình bỏ phiếu cho các cử tri có khả năng bỏ phiếu bằng cách vẽ số 0 (Đảng Cộng hòa) và 1 (Đảng Dân chủ) từ một chiếc bình chứa mã 0 và 1 cho tất cả các cử tri có khả năng bỏ phiếu. Trong các nghiên cứu dịch tễ học, chúng tôi thường giả định rằng đối tượng trong nghiên cứu của chúng tôi là một mẫu ngẫu nhiên từ nhóm dân số được quan tâm. Dữ liệu liên quan đến một kết quả cụ thể có thể được mô hình hóa dưới dạng mẫu ngẫu nhiên từ một chiếc bình chứa kết quả của toàn bộ nhóm quan tâm. Tương tự, trong nghiên cứu thực nghiệm, chúng ta thường giả định rằng từng sinh vật mà chúng ta đang nghiên cứu, ví dụ như giun, ruồi hoặc chuột, là một mẫu ngẫu nhiên từ một quần thể lớn hơn. Các thử nghiệm ngẫu nhiên cũng có thể được mô hình hóa bằng cách rút thăm từ một chiếc bình theo cách các cá nhân được phân thành các nhóm: khi được phân công, bạn sẽ vẽ nhóm của mình một cách ngẫu nhiên. Do đó, các mô hình lấy mẫu có mặt khắp nơi trong khoa học dữ liệu. Trò chơi sòng bạc cung cấp rất nhiều ví dụ về các tình huống trong thế giới thực trong đó các mô hình lấy mẫu được sử dụng để trả lời các câu hỏi cụ thể. Do đó chúng ta sẽ bắt đầu với những ví dụ như vậy.
+
+Giả sử một sòng bạc rất nhỏ thuê bạn tư vấn xem họ có nên lắp đặt bánh xe roulette hay không. Để ví dụ đơn giản, chúng tôi giả định rằng 1.000 người sẽ chơi và trò chơi duy nhất bạn có thể chơi trên bánh xe roulette là đặt cược vào màu đỏ hoặc đen. Sòng bạc muốn bạn dự đoán họ sẽ kiếm được bao nhiêu tiền hoặc thua bao nhiêu. Họ muốn có nhiều giá trị và đặc biệt, họ muốn biết khả năng mất tiền là bao nhiêu. Nếu xác suất này quá cao, họ sẽ chuyển sang cài đặt bánh xe roulette.
+
+Chúng ta sẽ định nghĩa một biến ngẫu nhiên
+điều đó sẽ đại diện cho tổng số tiền thắng cược của sòng bạc. Hãy bắt đầu bằng cách xây dựng chiếc bình. Một bánh xe roulette có 18 ô màu đỏ, 18 ô màu đen và 2 ô màu xanh lá cây. Vì vậy, việc chơi một màu trong một trò chơi roulette tương đương với việc rút ra từ chiếc bình này:
+
+```{r}
+color <- rep(c("Black", "Red", "Green"), c(18, 18, 2))
+```
+
+
+1.000 kết quả từ 1.000 người chơi là những kết quả rút ra độc lập từ chiếc bình này. Nếu màu đỏ xuất hiện, con bạc thắng và sòng bạc thua một đô la, vì vậy chúng ta rút -1$. Ngược lại, sòng bạc thắng được 1 đô la và chúng tôi rút được 1 đô la. Để xây dựng biến ngẫu nhiên của chúng tôi
+, chúng ta có thể sử dụng mã này:
+```{r}
+n <- 1000
+X <- sample(ifelse(color == "Red", -1, 1),  n, replace = TRUE)
+X[1:10]
+#>  [1] -1  1  1 -1 -1 -1  1  1  1  1
+```
+
+Bởi vì chúng tôi biết tỷ lệ của 1 và -1, chúng tôi có thể tạo các kết quả rút thăm bằng một dòng mã mà không cần xác định color:
+```{r}
+X <- sample(c(-1,1), n, replace = TRUE, prob=c(9/19, 10/19))
+```
+Chúng tôi gọi đây là mô hình lấy mẫu vì chúng tôi đang mô hình hóa hành vi ngẫu nhiên của roulette bằng việc lấy mẫu các lần rút tiền từ một chiếc bình. Tổng số tiền thắng S chỉ đơn giản là tổng của 1.000 lần rút thăm độc lập sau:
+Chúng tôi gọi đây là mô hình lấy mẫu vì chúng tôi đang mô hình hóa hành vi ngẫu nhiên của roulette bằng việc lấy mẫu các lần rút tiền từ một chiếc bình. Tổng số tiền thắng
+chỉ đơn giản là tổng của 1.000 lần rút thăm độc lập sau:
+```{r}
+X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+S <- sum(X)
+S
+#> [1] 22
+```
+5.3 Phân bố xác suất của biến ngẫu nhiên
+Nếu bạn chạy đoạn mã trên, bạn sẽ thấy rằng
+thay đổi mỗi lần. Tất nhiên là vì
+là một biến ngẫu nhiên Phân bố xác suất của một biến ngẫu nhiên cho chúng ta biết xác suất giá trị quan sát rơi vào bất kỳ khoảng thời gian nào. Vì vậy, ví dụ, nếu chúng ta muốn biết xác suất để chúng ta mất tiền, chúng ta đang hỏi xác suất để
+đang trong khoảng thời gian
+.
+
+Lưu ý rằng nếu chúng ta có thể định nghĩa hàm phân phối tích lũy
+, thì chúng ta sẽ có thể trả lời bất kỳ câu hỏi nào liên quan đến xác suất của các sự kiện được xác định bởi biến ngẫu nhiên của chúng ta
+, bao gồm cả sự kiện
+. Chúng tôi gọi đây là
+hàm phân phối của biến ngẫu nhiên .
+
+Chúng ta có thể ước tính hàm phân phối cho biến ngẫu nhiên
+bằng cách sử dụng mô phỏng Monte Carlo để tạo ra nhiều cách thể hiện biến ngẫu nhiên. Với mã này, chúng tôi tiến hành thử nghiệm cho 1.000 người chơi roulette, lặp đi lặp lại, cụ thể là
+lần:
+```{r}
+n <- 1000
+B <- 10000
+roulette_winnings <- function(n){
+  X <- sample(c(-1,1), n, replace = TRUE, prob = c(9/19, 10/19))
+  sum(X)
+}
+S <- replicate(B, roulette_winnings(n))
+
+```
+ây giờ chúng ta có thể hỏi như sau: trong các mô phỏng của mình, chúng ta có thường xuyên nhận được tổng nhỏ hơn hoặc bằng không a?
+```{r}
+mean(S <= a)
+```
+Đây sẽ là một xấp xỉ rất tốt của
+và chúng ta có thể dễ dàng trả lời câu hỏi của sòng bạc: khả năng chúng ta sẽ mất tiền là bao nhiêu? Chúng ta có thể thấy nó khá thấp:
+
+```{r}
+mean(S < 0)
+#> [1] 0.0456
+```
+Đây sẽ là một xấp xỉ rất tốt của
+và chúng ta có thể dễ dàng trả lời câu hỏi của sòng bạc: khả năng chúng ta sẽ mất tiền là bao nhiêu? Chúng ta có thể thấy nó khá thấp:
+```{r}
+mean(S < 0)
+#> [1] 0.0456
+```
+Chúng ta có thể hình dung sự phân bố của
+bằng cách tạo biểu đồ hiển thị xác suất
+trong vài khoảng thời gian
+:
+
+
+
+Chúng ta thấy rằng sự phân phối có vẻ gần như bình thường. Biểu đồ qq sẽ xác nhận rằng giá trị gần đúng thông thường gần với giá trị gần đúng hoàn hảo cho phân bố này. Trên thực tế, nếu phân phối là chuẩn thì tất cả những gì chúng ta cần xác định phân phối là giá trị trung bình và độ lệch chuẩn. Vì chúng ta có các giá trị ban đầu mà phân phối được tạo ra nên chúng ta có thể dễ dàng tính toán các giá trị này bằng mean(S)và sd(S). Đường cong màu xanh lam mà bạn nhìn thấy được thêm vào biểu đồ ở trên là mật độ bình thường với độ lệch chuẩn và trung bình này.
+
+Mức trung bình và độ lệch chuẩn này có tên đặc biệt. Chúng được gọi là giá trị kỳ vọng và sai số chuẩn của biến ngẫu nhiên
+. Chúng tôi sẽ nói nhiều hơn về những điều này trong phần tiếp theo.
+
+Lý thuyết thống kê cung cấp một cách để rút ra sự phân bố của các biến ngẫu nhiên được xác định là các lần rút ngẫu nhiên độc lập từ một chiếc bình. Cụ thể, trong ví dụ trên, chúng ta có thể chỉ ra rằng
+tuân theo phân phối nhị thức. Do đó, chúng ta không cần phải chạy mô phỏng Monte Carlo để biết phân bố xác suất của
+. Chúng tôi đã làm điều này cho mục đích minh họa.
+
+Chúng ta có thể sử dụng hàm dbinomvà pbinomtính toán xác suất một cách chính xác. Ví dụ, để tính toán
+chúng tôi chú ý điều đó:
+
+
+và chúng ta có thể sử dụng pbinomđể tính toán
+```{r}
+n <- 1000
+pbinom(n/2, size = n, prob = 10/19)
+#> [1] 0.0511
+```
+Bởi vì đây là hàm xác suất rời rạc nên để có được
+còn hơn là
+, chúng tôi viết:
+```{r}
+pbinom(n/2 - 1, size = n, prob = 10/19)
+#> [1] 0.0448
+```
+Để biết chi tiết về phân phối nhị thức, bạn có thể tham khảo bất kỳ cuốn sách xác suất cơ bản nào hoặc thậm chí Wikipedia 3 .
+
+Ở đây chúng tôi không đề cập đến những chi tiết này. Thay vào đó, chúng ta sẽ thảo luận về một phép tính gần đúng cực kỳ hữu ích do lý thuyết toán học cung cấp, áp dụng chung cho tổng và trung bình của các lần rút từ bất kỳ chiếc bình nào: Định lý giới hạn trung tâm (CLT).
+
+5.4 Phân phối so với phân phối xác suất
+Trước khi tiếp tục, chúng ta hãy phân biệt và kết nối quan trọng giữa phân bố của danh sách các số và phân bố xác suất. Trong chương trực quan, chúng tôi đã mô tả cách thức bất kỳ danh sách số nào
+có sự phân phối. Định nghĩa khá đơn giản. Chúng tôi xác định
+là hàm cho chúng ta biết tỷ lệ nào của danh sách nhỏ hơn hoặc bằng
+. Bởi vì chúng là những tóm tắt hữu ích khi phân phối gần như bình thường nên chúng ta xác định độ lệch trung bình và độ lệch chuẩn. Chúng được xác định bằng một phép toán đơn giản của vectơ chứa danh sách các số x:
+```{r}
+m <- sum(x)/length(x)
+s <- sqrt(sum((x - m)^2) / length(x))
+```
+Một biến ngẫu nhiên
+có chức năng phân phối. Để xác định điều này, chúng ta không cần một danh sách các con số. Đó là một khái niệm lý thuyết. Trong trường hợp này, chúng tôi xác định phân phối là
+để trả lời câu hỏi: xác suất để
+nhỏ hơn hoặc bằng
+? Không có danh sách các số.
+
+Tuy nhiên, nếu
+được xác định bằng cách vẽ từ một chiếc bình có các số trong đó, khi đó sẽ có một danh sách: danh sách các số bên trong chiếc bình. Trong trường hợp này, phân bố của danh sách đó là phân bố xác suất của
+còn giá trị trung bình và độ lệch chuẩn của danh sách đó là giá trị kỳ vọng và sai số chuẩn của biến ngẫu nhiên.
+
+Một cách khác để suy nghĩ về nó mà không liên quan đến chiếc bình là chạy mô phỏng Monte Carlo và tạo ra một danh sách rất lớn các kết quả của
+. Những kết quả này là một danh sách các con số. Sự phân bố của danh sách này sẽ gần đúng với phân bố xác suất của
+. Danh sách càng dài thì xấp xỉ càng tốt. Độ lệch trung bình và độ lệch chuẩn của danh sách này sẽ xấp xỉ giá trị kỳ vọng và sai số chuẩn của biến ngẫu nhiên.
+
+5.5 Ký hiệu cho các biến ngẫu nhiên
+Trong sách giáo khoa thống kê, chữ in hoa được sử dụng để biểu thị các biến ngẫu nhiên và chúng tôi tuân theo quy ước này ở đây. Các chữ cái viết thường được sử dụng cho các giá trị được quan sát. Bạn sẽ thấy một số ký hiệu bao gồm cả hai. Ví dụ: bạn sẽ thấy các sự kiện được xác định là
+. Đây
+là một biến ngẫu nhiên, làm cho nó trở thành một sự kiện ngẫu nhiên, và
+là một giá trị tùy ý và không ngẫu nhiên. Ví dụ,
+có thể đại diện cho số trên một cuộn súc sắc và
+sẽ đại diện cho một giá trị thực tế mà chúng ta thấy 1, 2, 3, 4, 5 hoặc 6. Vì vậy, trong trường hợp này, xác suất của
+là 1/6 bất kể giá trị quan sát được
+. Ký hiệu này hơi lạ vì khi chúng ta đặt câu hỏi về xác suất,
+không phải là đại lượng quan sát được. Thay vào đó, đó là một đại lượng ngẫu nhiên mà chúng ta sẽ thấy trong tương lai. Chúng ta có thể nói về những gì chúng ta mong đợi, những giá trị nào có thể xảy ra, nhưng không phải nó là gì. Nhưng một khi chúng ta có dữ liệu, chúng ta sẽ thấy sự hiện thực hóa
+. Vì vậy, các nhà khoa học dữ liệu sẽ nói về những gì có thể xảy ra sau khi chúng ta thấy những gì thực sự đã xảy ra.
+
+5.6 Giá trị kỳ vọng và sai số chuẩn
+Chúng tôi đã mô tả các mô hình lấy mẫu cho các lần rút thăm. Bây giờ chúng ta sẽ xem xét lý thuyết toán học cho phép chúng ta tính gần đúng phân bố xác suất cho tổng số lần rút thăm. Khi thực hiện việc này, chúng tôi sẽ có thể giúp sòng bạc dự đoán họ sẽ kiếm được bao nhiêu tiền. Cách tiếp cận tương tự mà chúng tôi sử dụng cho tổng số lần rút thăm sẽ hữu ích cho việc mô tả sự phân bổ mức trung bình và tỷ lệ mà chúng tôi cần để hiểu cách hoạt động của các cuộc thăm dò.
+
+Khái niệm quan trọng đầu tiên cần tìm hiểu là giá trị kỳ vọng . Trong các sách thống kê người ta thường sử dụng chữ cái
+như thế này:
+
+
+để biểu thị giá trị kỳ vọng của biến ngẫu nhiên
+.
+
+Một biến ngẫu nhiên sẽ thay đổi xung quanh giá trị mong đợi của nó theo cách mà nếu bạn lấy trung bình của rất nhiều lần rút thăm, thì mức trung bình của các lần rút thăm sẽ xấp xỉ giá trị mong đợi, càng tiến gần hơn khi bạn rút càng nhiều lần rút thăm. Điều này làm cho giá trị kỳ vọng trở thành một đại lượng hữu ích để tính toán.
+
+Đối với biến ngẫu nhiên rời rạc với các kết quả có thể xảy ra
+giá trị mong đợi được xác định là
+
+Nếu như
+là một biến ngẫu nhiên liên tục, có khoảng giá trị
+ĐẾN
+và hàm mật độ xác suất
+, tổng này trở thành tích phân:
+
+
+Lưu ý rằng trong trường hợp chúng ta đang chọn các giá trị từ một un urn trong đó mỗi giá trị
+có cơ hội bình đẳng
+việc được chọn phương trình trên chỉ đơn giản là giá trị trung bình của
+S
+
+ 
+
+Trong chiếc bình dùng để làm mô hình cá cược màu đỏ trong roulette, chúng ta có 20 đô la một và 18 đô la âm nên giá trị kỳ vọng là:
+
+
+tức là khoảng 5 xu. Bạn có thể nghĩ rằng hơi phản trực giác khi nói rằng
+thay đổi khoảng 0,05, khi giá trị duy nhất mà nó nhận là 1 và -1. Một cách để hiểu giá trị kỳ vọng trong bối cảnh này là nhận ra rằng nếu chúng ta chơi đi chơi lại trò chơi, sòng bạc sẽ thắng trung bình 5 xu mỗi trò chơi. Mô phỏng Monte Carlo xác nhận điều này:
+
+```{r}
+B <- 10^6
+x <- sample(c(-1, 1), B, replace = TRUE, prob = c(9/19, 10/19))
+mean(x)
+#> [1] 0.0517
+```
+Nói chung, nếu chiếc bình có hai kết quả có thể xảy ra, chẳng hạn
+Và
+, với tỷ lệ
+Và
+tương ứng, trung bình là:
+
+
+Để thấy điều này, hãy chú ý rằng nếu có
+hạt trong bình, sau đó chúng ta có
+ 
+cát
+ 
+s và vì trung bình là tổng,
+, chia cho tổng
+, chúng ta nhận được rằng trung bình là
+.
+
+Bây giờ lý do chúng ta xác định giá trị kỳ vọng là vì định nghĩa toán học này hóa ra lại hữu ích trong việc tính gần đúng phân bố xác suất của tổng, sau đó hữu ích cho việc mô tả phân bố của các giá trị trung bình và tỷ lệ. Thực tế hữu ích đầu tiên là giá trị kỳ vọng của tổng số lần rút là số lần rút
+trung bình cộng của các số trong bình.
+
+Vì vậy, nếu 1.000 người chơi roulette, sòng bạc dự kiến ​​sẽ thắng trung bình khoảng 1.000 người.
+0,05 USD = 50 USD. Nhưng đây là một giá trị mong đợi. Một quan sát có thể khác với giá trị kỳ vọng như thế nào? Sòng bạc thực sự cần phải biết điều này. Phạm vi khả năng là gì? Nếu số âm quá có khả năng xảy ra, họ sẽ không cài đặt bánh xe roulette. Lý thuyết thống kê một lần nữa trả lời câu hỏi này. Sai số chuẩn (SE) cho chúng ta ý tưởng về độ lớn của biến thể xung quanh giá trị kỳ vọng. Trong sách thống kê, người ta thường sử dụng:
+
+
+để biểu thị sai số chuẩn của một biến ngẫu nhiên.
+
+Đối với biến ngẫu nhiên rời rạc với các kết quả có thể xảy ra
+lỗi tiêu chuẩn được định nghĩa là
+
+mà bạn có thể coi là khoảng cách trung bình dự kiến ​​của
+từ giá trị mong đợi.
+
+Nếu như
+là một biến ngẫu nhiên liên tục, có khoảng giá trị
+ĐẾN
+và hàm mật độ xác suất
+, tổng này trở thành tích phân:
+
+
+Lưu ý rằng trong trường hợp chúng ta đang chọn các giá trị từ một un urn trong đó mỗi giá trị
+có cơ hội bình đẳng
+việc được chọn phương trình trên chỉ đơn giản là độ lệch chuẩn của
+S
+
+ 
+ 
+Sử dụng định nghĩa về độ lệch chuẩn, bằng một chút toán học, chúng ta có thể rút ra rằng nếu một chiếc bình chứa hai giá trị
+Và
+với tỷ lệ
+Và
+, tương ứng, độ lệch chuẩn là:
+
+
+Vì vậy, trong ví dụ roulette của chúng tôi, độ lệch chuẩn của các giá trị bên trong bình là:
+hoặc:
+```{r}
+2 * sqrt(90)/19
+#> [1] 0.999
+```
+Sai số chuẩn cho chúng ta biết sự khác biệt điển hình giữa một biến ngẫu nhiên và kỳ vọng của nó. Vì một lần rút thăm rõ ràng là tổng của một lần rút thăm, nên chúng ta có thể sử dụng công thức trên để tính toán rằng biến ngẫu nhiên được xác định bởi một lần rút thăm có giá trị kỳ vọng là 0,05 và sai số chuẩn khoảng 1. Điều này hợp lý vì chúng ta nhận được 1 hoặc -1, với 1 được ưa chuộng hơn -1 một chút.
+
+Một kết quả toán học được sử dụng rộng rãi là tha nếu các kết quả rút ra của chúng ta độc lập thì sai số chuẩn của tổng được tính theo phương trình:
+
+
+Sử dụng công thức này, tổng 1.000 người chơi có sai số chuẩn khoảng 32 USD:
+```{r}
+n <- 1000
+sqrt(n) * 2 * sqrt(90)/19
+#> [1] 31.6
+```
+Kết quả là, khi 1.000 người đặt cược vào màu đỏ, sòng bạc dự kiến ​​sẽ thắng 50 USD với sai số chuẩn là 32 USD. Do đó, nó có vẻ như là một vụ cá cược an toàn. Nhưng chúng ta vẫn chưa trả lời được câu hỏi: khả năng thua lỗ là bao nhiêu? Ở đây CLT sẽ giúp đỡ.
+
+Xác suất chính xác cho tiền thắng sòng bạc có thể được tính toán chính xác, thay vì xấp xỉ, bằng cách sử dụng phân phối nhị thức. Tuy nhiên, ở đây chúng ta tập trung vào CLT, giá trị này có thể được áp dụng chung cho tổng các biến ngẫu nhiên theo cách mà phân phối nhị thức không thể làm được.
+
+5.7 Định lý giới hạn trung tâm
+Định lý giới hạn trung tâm (CLT) cho chúng ta biết rằng khi số lần rút, còn gọi là cỡ mẫu , lớn, thì phân bố xác suất của tổng các lần rút độc lập là xấp xỉ bình thường. Bởi vì các mô hình lấy mẫu được sử dụng cho rất nhiều quy trình tạo dữ liệu nên CLT được coi là một trong những hiểu biết toán học quan trọng nhất trong lịch sử.
+
+Trước đây, chúng ta đã thảo luận rằng nếu chúng ta biết rằng phân bố của một danh sách các số gần đúng với phân phối chuẩn, thì tất cả những gì chúng ta cần để mô tả danh sách đó là giá trị trung bình và độ lệch chuẩn. Chúng ta cũng biết rằng điều tương tự cũng áp dụng cho phân bố xác suất. Nếu một biến ngẫu nhiên có phân bố xác suất gần đúng với phân bố chuẩn thì tất cả những gì chúng ta cần để mô tả phân bố xác suất là giá trị trung bình và độ lệch chuẩn, được gọi là giá trị kỳ vọng và sai số chuẩn.
+
+Trước đây chúng tôi đã chạy mô phỏng Monte Carlo này:
+```{r}
+n <- 1000
+B <- 10000
+roulette_winnings <- function(n){
+  X <- sample(c(-1,1), n, replace = TRUE, prob = c(9/19, 10/19))
+  sum(X)
+}
+S <- replicate(B, roulette_winnings(n))
+```
+Định lý giới hạn trung tâm (CLT) cho chúng ta biết rằng tổng
+được xấp xỉ bằng phân phối chuẩn. Sử dụng các công thức trên, chúng ta biết rằng giá trị kỳ vọng và sai số chuẩn là:
+```{r}
+n * (20 - 18)/38 
+#> [1] 52.6
+sqrt(n)*2*sqrt(90)/19 
+#> [1] 31.6
+```
+Các giá trị lý thuyết ở trên khớp với giá trị thu được từ mô phỏng Monte Carlo:
+```{r}
+mean(S)
+#> [1] 52.2
+sd(S)
+#> [1] 31.7
+```
+Bằng cách sử dụng CLT, chúng ta có thể bỏ qua mô phỏng Monte Carlo và thay vào đó tính xác suất sòng bạc thua tiền bằng cách sử dụng phép tính gần đúng này:
+```{r}
+mu <- n * (20 - 18)/38
+se <-  sqrt(n)*2*sqrt(90)/19 
+pnorm(0, mu, se)
+#> [1] 0.0478
+```
+điều này cũng rất phù hợp với kết quả Monte Carlo của chúng tôi:
+```{r}
+mean(S < 0)
+#> [1] 0.0458
+```
+
+5.7.1 Trong Định lý giới hạn trung tâm lớn bao nhiêu?
+CLT hoạt động khi số lần rút lớn. Nhưng lớn là một thuật ngữ tương đối. Trong nhiều trường hợp, chỉ cần 30 lần rút là đủ để CLT trở nên hữu ích. Trong một số trường hợp cụ thể, chỉ cần 10 là đủ. Tuy nhiên, những điều này không nên được coi là quy tắc chung. Ví dụ, lưu ý rằng khi xác suất thành công rất nhỏ, chúng ta cần cỡ mẫu lớn hơn nhiều.
+
+Bằng cách minh họa, chúng ta hãy xem xét trò xổ số. Trong xổ số, cơ hội trúng thưởng là dưới 1 phần triệu. Hàng ngàn người chơi nên số lần rút thăm rất lớn. Tuy nhiên, số người chiến thắng, tổng số lần rút, nằm trong khoảng từ 0 đến 4. Tổng này chắc chắn không được ước lượng chính xác bằng phân phối chuẩn, do đó CLT không được áp dụng, ngay cả với cỡ mẫu rất lớn. Điều này thường đúng khi xác suất thành công là rất thấp. Trong những trường hợp này, phân phối Poisson phù hợp hơn.
+
+Bạn có thể kiểm tra các thuộc tính của phân phối Poisson bằng cách sử dụng dpoisvà ppois. Bạn có thể tạo các biến ngẫu nhiên theo phân phối này với rpois. Tuy nhiên, chúng tôi không đề cập đến lý thuyết ở đây. Bạn có thể tìm hiểu về phân phối Poisson trong bất kỳ sách giáo khoa xác suất nào và thậm chí cả Wikipedia 4
+
+5.8 Đặc tính thống kê của giá trị trung bình
+Có một số kết quả toán học hữu ích mà chúng tôi đã sử dụng ở trên và thường sử dụng khi làm việc với dữ liệu. Chúng tôi liệt kê chúng dưới đây.
+
+1. Giá trị kỳ vọng của tổng các biến ngẫu nhiên bằng tổng giá trị kỳ vọng của từng biến ngẫu nhiên. Chúng ta có thể viết nó như thế này:
+
+
+Nếu
+là những lần rút độc lập từ chiếc bình thì tất cả chúng đều có cùng giá trị kỳ vọng. Hãy gọi nó là
+và như vậy:
+
+
+đó là một cách khác để viết kết quả mà chúng tôi trình bày ở trên đối với tổng số lần rút.
+
+2. Giá trị kỳ vọng của hằng số không ngẫu nhiên nhân với biến ngẫu nhiên bằng hằng số không ngẫu nhiên nhân với giá trị kỳ vọng của biến ngẫu nhiên. Điều này dễ giải thích hơn bằng các ký hiệu:
+
+
+Để biết lý do tại sao điều này mang tính trực quan, hãy xem xét việc thay đổi đơn vị. Nếu chúng ta thay đổi đơn vị của một biến ngẫu nhiên, chẳng hạn từ đô la sang xu, thì kỳ vọng cũng sẽ thay đổi theo cách tương tự. Một hệ quả của hai sự thật trên là giá trị kỳ vọng của giá trị trung bình của các lần rút độc lập từ cùng một chiếc bình là giá trị kỳ vọng của chiếc bình, gọi nó là
+lại:
+
+
+3. Bình phương sai số chuẩn của tổng các biến ngẫu nhiên độc lập bằng tổng bình phương sai số chuẩn của từng biến ngẫu nhiên. Điều này dễ hiểu hơn ở dạng toán học:
+
+
+Bình phương của sai số chuẩn được gọi là phương sai trong sách giáo khoa thống kê. Lưu ý rằng thuộc tính cụ thể này không trực quan như ba phần giải thích sâu hơn trước đó có thể được tìm thấy trong sách giáo khoa thống kê.
+
+4. Sai số chuẩn của hằng số không ngẫu nhiên nhân với một biến ngẫu nhiên bằng hằng số không ngẫu nhiên nhân với sai số chuẩn của biến ngẫu nhiên. Đúng như mong đợi:
+
+
+Để biết tại sao điều này mang tính trực quan, hãy nghĩ lại về đơn vị.
+
+Hệ quả của 3 và 4 là sai số chuẩn của giá trị trung bình của các lần rút độc lập từ cùng một chiếc bình là độ lệch chuẩn của chiếc bình đó chia cho căn bậc hai của
+(số lần rút), gọi nó là
+:
+
+ 
+
+5. Nếu
+là biến ngẫu nhiên có phân phối chuẩn thì nếu
+Và
+là các hằng số không ngẫu nhiên,
+cũng là biến ngẫu nhiên có phân phối chuẩn. Tất cả những gì chúng ta đang làm là thay đổi đơn vị của biến ngẫu nhiên bằng cách nhân với
+, sau đó dịch chuyển tâm bằng
+.
+
+Lưu ý rằng sách giáo khoa thống kê sử dụng các chữ cái Hy Lạp
+Và
+để biểu thị giá trị kỳ vọng và sai số chuẩn tương ứng. Điều này là do
+là chữ cái Hy Lạp cho
+, chữ cái đầu tiên của giá trị trung bình , là một thuật ngữ khác được sử dụng cho giá trị kỳ vọng. Tương tự,
+là chữ cái Hy Lạp cho
+, chữ cái đầu tiên của lỗi tiêu chuẩn.
+
+Giả định về tính độc lập là quan trọng
+Hãy làm cho lời giải thích ngắn gọn và rõ ràng hơn:
+
+Phương trình đã cho cho thấy những hiểu biết quan trọng cho các tình huống thực tế. Cụ thể, nó gợi ý rằng sai số chuẩn có thể được giảm thiểu bằng cách tăng cỡ mẫu,
+và chúng ta có thể định lượng mức giảm này. Tuy nhiên, nguyên tắc này chỉ đúng khi các biến
+độc lập. Nếu không, sai số chuẩn ước tính có thể giảm đi đáng kể.
+
+Trong Phần 13.2 , chúng tôi giới thiệu khái niệm tương quan, định lượng mức độ phụ thuộc lẫn nhau của các biến. Nếu hệ số tương quan giữa các biến ( X ) là ( ), thì sai số chuẩn của giá trị trung bình của chúng là:
+
+ 
+
+Quan sát quan trọng ở đây là như
+đạt đến giới hạn trên là 1 thì sai số chuẩn tăng lên. Điều đáng chú ý là trong tình hình
+, sai số chuẩn,
+, bằng
+và nó không bị ảnh hưởng bởi kích thước mẫu
+.
+
+5.8.1 Luật số lớn
+Một ý nghĩa quan trọng của kết quả 5 ở trên là sai số chuẩn của giá trị trung bình ngày càng nhỏ đi khi
+ngày càng lớn hơn. Khi
+là rất lớn thì sai số chuẩn thực tế là bằng 0 và giá trị trung bình của các lần rút hội tụ về giá trị trung bình của bình. Điều này được biết đến trong sách giáo khoa thống kê là quy luật số lớn hoặc quy luật trung bình.
+
+Giải thích sai về quy luật trung bình
+Quy luật trung bình đôi khi bị hiểu sai. Ví dụ: nếu bạn tung một đồng xu 5 lần và lần nào cũng thấy mặt ngửa, bạn có thể nghe ai đó tranh luận rằng lần tung tiếp theo có thể là mặt sấp vì quy luật trung bình: trung bình chúng ta sẽ thấy 50% mặt ngửa và 50% mặt sấp. Một lập luận tương tự sẽ là nói rằng màu đỏ “đến hạn” trên bánh xe roulette sau khi nhìn thấy màu đen xuất hiện năm lần liên tiếp. Các sự kiện này độc lập nên cơ hội xuất hiện đồng xu ngửa là 50% bất kể 5 sự kiện trước đó. Đây cũng là trường hợp xảy ra với kết quả roulette. Quy luật trung bình chỉ áp dụng khi số lần rút rất lớn chứ không phải ở những mẫu nhỏ. Sau một triệu lần tung, chắc chắn bạn sẽ thấy khoảng 50% số lần ngửa bất kể kết quả của năm lần tung đầu tiên như thế nào. Một cách lạm dụng luật trung bình buồn cười khác là trong thể thao khi các phát thanh viên thể thao trên truyền hình dự đoán một cầu thủ sắp thành công vì họ đã thất bại vài lần liên tiếp.
+
+
