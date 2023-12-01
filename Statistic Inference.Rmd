@@ -1,0 +1,1041 @@
+Suy luận thống kê
+Suy luận thống kê là một phần của thống kê giúp phân biệt các mẫu phát sinh từ tín hiệu với các mẫu phát sinh từ cơ hội. Suy luận thống kê là một chủ đề rộng và ở đây chúng ta sẽ đề cập đến những vấn đề cơ bản bằng cách sử dụng các cuộc thăm dò làm ví dụ thúc đẩy. Để mô tả các khái niệm, chúng tôi bổ sung các công thức toán học bằng mô phỏng Monte Carlo và mã R. Chúng tôi thúc đẩy các khái niệm bằng việc dự báo bầu cử như một trường hợp nghiên cứu.
+
+Một ngày trước cuộc bầu cử tổng thống năm 2008, FiveThirtyEight của Nate Silver tuyên bố rằng "Barack Obama dường như đã sẵn sàng cho một chiến thắng bầu cử quyết định". Họ còn đi xa hơn và dự đoán rằng Obama sẽ thắng cử với 349 phiếu đại cử tri lên 189, và số phiếu phổ thông chênh lệch 6,1%. FiveThirtyEight cũng đính kèm một tuyên bố mang tính xác suất vào dự đoán của họ và khẳng định rằng Obama có 91% cơ hội thắng cử. Các dự đoán khá chính xác vì trong kết quả cuối cùng, Obama đã giành chiến thắng ở cử tri đoàn với tỷ số 365 đến 173 và số phiếu phổ thông với chênh lệch 7,2%. Thành tích của họ trong cuộc bầu cử năm 2008 đã khiến FiveThirtyEight thu hút sự chú ý của các chuyên gia chính trị và nhân vật truyền hình. Bốn năm sau, một tuần trước cuộc bầu cử tổng thống năm 2012, Nate Silver của FiveThirtyEight đã mang lại cho Obama 90% cơ hội chiến thắng mặc dù nhiều chuyên gia cho rằng kết quả cuối cùng sẽ gần hơn. Nhà bình luận chính trị Joe Scarborough đã nói trong show1 của mình:
+Bất cứ ai nghĩ rằng cuộc đua này chẳng là gì ngoài một cuộc đua lộn xộn ngay bây giờ đều là một nhà tư tưởng… họ chỉ là trò đùa.
+
+Nate Silver đã trả lời qua Twitter:
+
+Nếu bạn nghĩ đó là một trò tung hứng, hãy đặt cược. Nếu Obama thắng, bạn quyên góp 1.000 USD cho Hội Chữ Thập Đỏ Hoa Kỳ. Nếu Romney thắng thì tôi cũng vậy. Thỏa thuận?
+
+Năm 2016, Silver không chắc chắn bằng và chỉ mang lại cho Hillary Clinton 71% chiến thắng. Ngược lại, nhiều nhà dự báo khác gần như chắc chắn rằng cô ấy sẽ thắng. Cô ấy đã thua. Nhưng 71% vẫn là hơn 50%, vậy ông Silver có sai không? Và xác suất có ý nghĩa gì trong bối cảnh này? Xúc xắc đang được tung hay bài đang được chia ở đâu đó?
+
+Trong phần này của cuốn sách, chúng tôi sẽ chỉ ra cách áp dụng các khái niệm xác suất mà chúng ta đã học ở phần trước để phát triển các phương pháp thống kê giúp các cuộc thăm dò trở thành một công cụ hiệu quả. Mặc dù ở Hoa Kỳ, cuộc bỏ phiếu phổ thông không quyết định kết quả của cuộc bầu cử tổng thống nhưng chúng tôi sẽ sử dụng nó như một ví dụ minh họa và đơn giản để giới thiệu các khái niệm chính về suy luận thống kê. Dự báo cuộc bầu cử là một quá trình phức tạp hơn bao gồm việc kết hợp kết quả từ 50 tiểu bang và DC và chúng tôi sẽ mô tả nó ở chương cuối, sau khi đề cập đến tất cả các khái niệm cơ bản. Cụ thể, chúng ta sẽ tìm hiểu các khái niệm thống kê cần thiết để xác định các ước tính và tỷ lệ sai sót cho cuộc bỏ phiếu phổ thông và chỉ ra cách chúng được sử dụng để xây dựng khoảng tin cậy. Một khi chúng ta học được điều này, chúng ta sẽ có thể hiểu được sức mạnh thống kê và giá trị p, những khái niệm phổ biến trong các tài liệu học thuật chẳng hạn. Sau đó, chúng tôi tổng hợp dữ liệu từ các tổ chức thăm dò ý kiến ​​khác nhau để chỉ ra những thiếu sót của các mô hình mà các tổ chức thăm dò ý kiến ​​truyền thống sử dụng và mô tả cách cải thiện mô hình. Để hiểu các tuyên bố xác suất về cơ hội chiến thắng của một ứng cử viên, chúng tôi sẽ giới thiệu mô hình Bayesian. Cuối cùng, chúng tôi tổng hợp tất cả lại bằng cách sử dụng các mô hình phân cấp để tạo lại phiên bản đơn giản hóa của mô hình FiveThirtyEight và áp dụng cho cuộc bầu cử năm 2016.
+
+6 Tham số và ước lượng
+Việc thăm dò ý kiến ​​đã được tiến hành từ thế kỷ 19. Mục tiêu chung là mô tả quan điểm của một nhóm dân cư cụ thể về một nhóm chủ đề nhất định. Trong thời gian gần đây, những cuộc thăm dò này đã tràn lan ở Mỹ trong các cuộc bầu cử tổng thống. Các cuộc thăm dò rất hữu ích khi việc phỏng vấn mọi thành viên của một nhóm dân cư cụ thể là không thể về mặt logic. Chiến lược chung là phỏng vấn một nhóm nhỏ hơn, được chọn ngẫu nhiên và sau đó suy ra ý kiến ​​của toàn bộ dân số từ ý kiến ​​của nhóm nhỏ hơn. Lý thuyết thống kê được sử dụng để biện minh cho quá trình này. Lý thuyết này được gọi là suy luận và nó là chủ đề chính của phần này của cuốn sách.
+
+Có lẽ các cuộc thăm dò dư luận được biết đến nhiều nhất là những cuộc được tiến hành để xác định ứng cử viên nào được cử tri ưa thích hơn trong một cuộc bầu cử nhất định. Các nhà chiến lược chính trị sử dụng rộng rãi các cuộc thăm dò ý kiến ​​để quyết định, trong số những việc khác, cách đầu tư nguồn lực. Ví dụ: họ có thể muốn biết vị trí địa lý nào để tập trung nỗ lực “bỏ phiếu”.
+
+Bầu cử là một trường hợp thăm dò dư luận đặc biệt thú vị vì ý kiến ​​thực tế của toàn dân được tiết lộ vào ngày bầu cử. Tất nhiên, việc tổ chức một cuộc bầu cử thực tế tốn hàng triệu đô la, điều này khiến việc bỏ phiếu trở thành một chiến lược tiết kiệm chi phí cho những ai muốn dự đoán kết quả. Ngoài chiến lược gia, các tổ chức tin tức cũng quan tâm đến việc dự báo các cuộc bầu cử vì dường như có nhu cầu về những việc này.
+
+6.1 Mô hình lấy mẫu cho các cuộc thăm dò ý kiến
+Chúng tôi bắt đầu bằng cách kết nối lý thuyết xác suất với nhiệm vụ sử dụng các cuộc thăm dò để tìm hiểu về dân số.
+
+Mặc dù thông thường kết quả của các cuộc thăm dò này được giữ kín, nhưng các cuộc thăm dò tương tự vẫn được thực hiện bởi các tổ chức tin tức vì kết quả có xu hướng được công chúng quan tâm và công khai. Cuối cùng chúng tôi sẽ xem xét dữ liệu đó.
+
+Real Clear Politics1 là một ví dụ về công cụ tổng hợp tin tức tổ chức và công bố kết quả thăm dò ý kiến. Ví dụ: họ trình bày các kết quả thăm dò sau đây báo cáo ước tính về số phiếu phổ thông cho cuộc bầu cử tổng thống năm 2016:
+Hãy thực hiện một số quan sát về bảng trên. Đầu tiên, hãy lưu ý rằng các cuộc thăm dò khác nhau, tất cả đều được thực hiện vài ngày trước cuộc bầu cử, cho thấy mức chênh lệch khác nhau: chênh lệch ước tính giữa tỷ lệ ủng hộ dành cho hai ứng cử viên. Cũng lưu ý rằng mức chênh lệch được báo cáo xoay quanh kết quả cuối cùng là kết quả thực tế: Clinton đã giành được 2,1% số phiếu phổ thông. Chúng tôi cũng thấy một cột có tiêu đề MoE tượng trưng cho biên độ sai số.
+
+Để giúp chúng ta hiểu được mối liên hệ giữa các cuộc thăm dò ý kiến ​​và những gì chúng ta đã học được, hãy xây dựng một tình huống tương tự như tình huống mà những người thăm dò ý kiến ​​phải đối mặt. Để bắt chước thách thức mà những người thăm dò thực sự phải đối mặt trong việc cạnh tranh với những người thăm dò khác để thu hút sự chú ý của giới truyền thông, chúng tôi sẽ sử dụng một chiếc bình đầy hạt để đại diện cho cử tri và giả vờ rằng chúng tôi đang cạnh tranh để giành giải thưởng trị giá 25 đô la. Thử thách là đoán sự chênh lệch giữa tỷ lệ hạt xanh và đỏ trong chiếc bình này (trong trường hợp này là lọ dưa chua):
+Trước khi đưa ra dự đoán, bạn có thể lấy mẫu (có thay thế) từ chiếc bình. Để bắt chước thực tế là việc tổ chức các cuộc thăm dò ý kiến ​​rất tốn kém, bạn phải trả 0,10 USD cho mỗi hạt lấy mẫu. Do đó, nếu cỡ mẫu của bạn là 250 và bạn thắng, bạn sẽ hòa vốn vì bạn sẽ trả 25 USD để nhận giải thưởng 25 USD của mình. Việc bạn tham gia cuộc thi có thể là một khoảng thời gian. Nếu khoảng thời gian bạn gửi có tỷ lệ thực, bạn sẽ nhận được một nửa số tiền bạn đã trả và chuyển sang giai đoạn thứ hai của cuộc thi. Trong giai đoạn thứ hai, mục có khoảng thời gian nhỏ nhất được chọn là người chiến thắng.
+Gói dslabs bao gồm một chức năng hiển thị kết quả rút ngẫu nhiên từ chiếc bình này:
+```{r}
+library(tidyverse)
+library(dslabs)
+take_poll(25)
+```
+Hãy suy nghĩ về cách bạn xây dựng khoảng thời gian của mình dựa trên dữ liệu hiển thị ở trên.
+
+Chúng tôi vừa mô tả một mô hình lấy mẫu đơn giản cho các cuộc thăm dò dư luận. Các hạt bên trong bình tượng trưng cho những cá nhân sẽ bỏ phiếu trong ngày bầu cử. Những người sẽ bỏ phiếu cho ứng cử viên Đảng Cộng hòa được đại diện bởi các hạt màu đỏ và Đảng Dân chủ với các hạt màu xanh. Để đơn giản, giả sử không có màu nào khác. Nghĩa là chỉ có hai đảng: Cộng hòa và Dân chủ.
+6.2 Quần thể, mẫu, thông số và ước tính
+Chúng tôi muốn dự đoán tỷ lệ hạt màu xanh trong bình. Hãy gọi số lượng p này, sau đó cho chúng ta biết tỷ lệ của các hạt màu đỏ 1-p, và sự chênh lệch p-(1-p), rút gọn thành 2p-1.
+
+Trong sách giáo khoa thống kê, các hạt trong bình được gọi là dân số. Tỷ lệ hạt màu xanh trong quần thể p được gọi là một tham số. 25 hạt mà chúng ta thấy trong biểu đồ trước được gọi là mẫu. Nhiệm vụ của suy luận thống kê là dự đoán tham số p sử dụng dữ liệu quan sát được trong mẫu.
+
+Chúng ta có thể làm điều này với 25 quan sát trên không? Nó chắc chắn là thông tin. Ví dụ, cho rằng chúng ta nhìn thấy 13 hạt màu đỏ và 12 hạt màu xanh, điều khó có thể xảy ra là
+p > 9 hoặc p < 1.
+
+Nhưng chúng ta đã sẵn sàng dự đoán một cách chắc chắn rằng có nhiều hạt màu đỏ hơn hạt màu xanh trong lọ chưa?
+
+Chúng tôi muốn xây dựng một ước tính về p chỉ sử dụng thông tin chúng tôi quan sát được. Ước tính nên được coi là bản tóm tắt dữ liệu được quan sát mà chúng tôi cho là có nhiều thông tin về tham số quan tâm. Có vẻ trực quan khi nghĩ rằng tỷ lệ hạt màu xanh trong mẫu
+ít nhất phải liên quan đến tỷ lệ thực tế. Nhưng liệu chúng ta có đơn giản dự đoán plà 0,48? Đầu tiên, hãy nhớ rằng tỷ lệ mẫu là một biến ngẫu nhiên. Nếu chúng ta chạy lệnh take_poll(25) bốn lần, mỗi lần chúng ta sẽ nhận được một câu trả lời khác nhau, vì tỷ lệ mẫu là một biến ngẫu nhiên.
+
+Lưu ý rằng trong bốn mẫu ngẫu nhiên được trình bày ở trên, tỷ lệ mẫu nằm trong khoảng từ 0,44 đến 0,60. Bằng cách mô tả sự phân bố của biến ngẫu nhiên này, chúng ta sẽ có thể hiểu rõ hơn về ước tính này tốt như thế nào và chúng ta có thể cải thiện nó như thế nào.
+
+6.2.1 Trung bình mẫu
+Việc tiến hành một cuộc thăm dò ý kiến ​​đang được mô hình hóa như lấy một mẫu ngẫu nhiên từ một chiếc bình. Chúng tôi đang đề xuất sử dụng tỷ lệ hạt màu xanh lam trong mẫu của chúng tôi để ước tính tham số p. Sau khi có được ước tính này, chúng tôi có thể dễ dàng báo cáo ước tính về mức chênh lệch 2p-1, nhưng để đơn giản chúng tôi sẽ minh họa các khái niệm để ước lượng. Chúng ta sẽ sử dụng kiến ​​thức về xác suất để bảo vệ việc sử dụng tỷ lệ mẫu và định lượng mức độ chênh lệch giữa chúng ta nghĩ với tỷ lệ tổng thể p
+.
+
+Chúng tôi bắt đầu bằng cách xác định biến ngẫu nhiên X là: X-1.Nếu chúng ta chọn ngẫu nhiên một hạt màu xanh và X = 0 nếu nó có màu đỏ. Điều này ngụ ý rằng tổng thể là một danh sách gồm các số 0 và 1. Nếu chúng ta lấy mẫu N hạt, sau đó là giá trị trung bình của các lần rút
+ tương đương với tỷ lệ hạt màu xanh trong mẫu của chúng tôi. Điều này là do việc thêm
+s tương đương với việc đếm các hạt màu xanh và chia số này cho tổng số tương đương với việc tính toán một tỷ lệ. Chúng tôi sử dụng ký hiệu để đại diện cho mức trung bình này. Nói chung, trong sách giáo khoa thống kê, một thanh phía trên ký hiệu có nghĩa là mức trung bình. Lý thuyết chúng ta vừa học về tổng số lần rút trở nên hữu ích vì trung bình là tổng số lần rút nhân với hằng số 1/N:
+
+Để đơn giản, hãy giả sử rằng các lần rút là độc lập: sau khi chúng tôi nhìn thấy từng hạt được lấy mẫu, chúng tôi sẽ đưa nó trở lại bình. Trong trường hợp này, chúng ta biết gì về việc phân bổ tổng số tiền rút? Đầu tiên, chúng ta biết rằng giá trị kỳ vọng của tổng số lần rút là Nlần giá trị trung bình của các giá trị trong bình. Chúng ta biết rằng trung bình của số 0 và số 1 trong bình phải là p, tỷ lệ của hạt màu xanh.Ở đây, chúng ta nhận thấy một sự khác biệt quan trọng với những gì chúng ta đã làm trong chương Xác suất: chúng ta không biết trong bình có gì. Chúng ta biết có những hạt xanh và đỏ, nhưng chúng ta không biết mỗi hạt có bao nhiêu hạt. Đây là điều chúng tôi muốn tìm hiểu: chúng tôi đang cố gắng ước tính p.
+
+6.2.2 Thông số
+Giống như việc chúng ta sử dụng các biến để xác định các ẩn số trong hệ phương trình, trong suy luận thống kê, chúng ta xác định các tham số để xác định các phần chưa biết trong mô hình của mình. Trong mô hình chiếc bình mà chúng tôi đang sử dụng để bắt chước một cuộc thăm dò ý kiến, chúng tôi không biết tỷ lệ các hạt màu xanh lam trong chiếc bình. Chúng tôi xác định các tham số
+ để biểu thị đại lượng này.
+ là mức trung bình của chiếc bình vì nếu lấy trung bình của số 1 (màu xanh) và số 0 (màu đỏ), chúng ta sẽ có được tỷ lệ các hạt màu xanh. Vì mục tiêu chính của chúng tôi là tìm ra những gì, chúng ta sẽ ước tính tham số này.
+Các ý tưởng được trình bày ở đây về cách chúng tôi ước tính các tham số và cung cấp thông tin chi tiết về mức độ hiệu quả của các ước tính này, sẽ ngoại suy cho nhiều nhiệm vụ khoa học dữ liệu. Ví dụ: chúng tôi có thể muốn xác định sự khác biệt trong việc cải thiện sức khỏe giữa bệnh nhân được điều trị và nhóm đối chứng. Chúng ta có thể hỏi, những ảnh hưởng sức khỏe của việc hút thuốc đối với người dân là gì? Sự khác biệt giữa các nhóm chủng tộc trong vụ cảnh sát xả súng chết người là gì? Tỷ lệ thay đổi về tuổi thọ ở Mỹ trong 10 năm qua là bao nhiêu? Tất cả những câu hỏi này có thể được đóng khung như một nhiệm vụ ước tính một tham số từ một mẫu.
+
+6.3 Thăm dò ý kiến ​​và dự báo
+Trước khi tiếp tục, chúng ta hãy làm rõ một vấn đề quan trọng liên quan đến vấn đề thực tế trong việc dự báo cuộc bầu cử. Nếu một cuộc thăm dò được tiến hành bốn tháng trước cuộc bầu cử, nó sẽ ước tính tỷ lệ
+ vào thời điểm đó chứ không phải cho ngày bầu cử. Các
+ cho đêm bầu cử có thể khác vì quan điểm của mọi người dao động theo thời gian. Các cuộc thăm dò được cung cấp vào đêm trước cuộc bầu cử có xu hướng chính xác nhất vì các ý kiến ​​không thay đổi nhiều trong một ngày. Tuy nhiên, các nhà dự báo cố gắng xây dựng các công cụ mô hình hóa mức độ thay đổi của các ý kiến ​​theo thời gian và cố gắng dự đoán kết quả của đêm bầu cử có tính đến thực tế là các ý kiến ​​luôn biến động. Chúng tôi sẽ mô tả một số phương pháp để thực hiện việc này trong phần sau.
+ 
+ 6.4 Đặc tính ước tính của chúng tôi: giá trị kỳ vọng và sai số chuẩn
+Để hiểu ước tính của chúng tôi tốt đến mức nào, chúng tôi sẽ mô tả các đặc tính thống kê của biến ngẫu nhiên được xác định ở trên: tỷ lệ mẫu. Nhớ lấ là tổng của các lần rút độc lập nên các quy tắc chúng tôi đề cập trong chương xác suất sẽ được áp dụng.
+Sử dụng những gì chúng ta đã học, giá trị kỳ vọng của tổng là mức trung bình của bình,
+. Vì vậy chia cho hằng số không ngẫu nhiên cho chúng ta biết giá trị kỳ vọng của giá trị trung bình là. Chúng ta có thể viết nó bằng ký hiệu toán học của chúng ta:
+
+Chúng ta cũng có thể sử dụng những gì đã học để tìm ra sai số chuẩn: sai số chuẩn của tổng làđộ lệch chuẩn của bình. Chúng ta có thể tính được sai số chuẩn của chiếc bình không? Chúng tôi đã học được một công thức cho chúng tôi biết rằng đó là. Bởi vì chúng ta đang chia tổng cho, chúng ta đi đến công thức sau đây cho sai số chuẩn của giá trị trung bình:
+
+Kết quả này cho thấy sức mạnh của các cuộc thăm dò ý kiến. Giá trị kỳ vọng của tỷ lệ mẫu
+ là tham số quan tâm và chúng ta có thể làm cho sai số chuẩn nhỏ như chúng ta muốn bằng cách tăng. Luật số lớn cho chúng ta biết rằng với một cuộc thăm dò đủ lớn, ước tính của chúng ta sẽ hội tụ về.
+
+Nếu chúng ta thực hiện một cuộc thăm dò đủ lớn để có sai số chuẩn khoảng 1%, chúng ta sẽ khá chắc chắn về việc ai sẽ thắng. Nhưng cuộc thăm dò phải lớn đến mức nào để sai số chuẩn nhỏ như vậy?
+
+Một vấn đề là chúng ta không biết, nên chúng ta không thể tính được sai số chuẩn. Tuy nhiên, vì mục đích minh họa, hãy giả sử rằng và vẽ đồ thị sai số chuẩn so với cỡ mẫu:
+
+Từ biểu đồ, chúng ta thấy rằng chúng ta sẽ cần một cuộc thăm dò ý kiến ​​của hơn 10.000 người để có được sai số chuẩn thấp đến mức đó. Chúng tôi hiếm khi thấy các cuộc thăm dò quy mô này một phần do chi phí. Từ bảng Chính trị rõ ràng thực sự, chúng tôi biết rằng quy mô mẫu trong các cuộc thăm dò dư luận dao động từ 500-3.500 người. Với cỡ mẫu là 1.000 và
+, lỗi tiêu chuẩn là:
+```{r}
+sqrt(p*(1 - p))/sqrt(1000)
+#> [1] 0.0158
+```
+
+hoặc 1,5 điểm phần trăm. Vì vậy ngay cả với các cuộc thăm dò lớn, đối với các cuộc bầu cử sát sao,
+ có thể khiến chúng ta lạc lối nếu chúng ta không nhận ra đó là một biến ngẫu nhiên. Tuy nhiên, chúng ta thực sự có thể nói nhiều hơn về mức độ chúng ta đạt được
+ và chúng tôi làm điều đó trong Phần 7.
+ 
+ 7 Định lý giới hạn trung tâm
+CLT cho chúng ta biết rằng hàm phân phối của tổng số lần rút gần như bình thường. Chúng ta cũng đã biết rằng việc chia một biến ngẫu nhiên có phân phối chuẩn cho một hằng số cũng là một biến có phân phối chuẩn. Điều này hàm ý rằng việc phân phối
+ là gần như bình thường. Tóm lại, chúng ta có điều đó có phân phối xấp xỉ chuẩn với giá trị kỳ vọng và sai số chuẩn.
+
+Bây giờ điều này giúp chúng ta như thế nào? Giả sử chúng ta muốn biết xác suất để chúng ta nằm trong phạm vi 1% tính từ. Về cơ bản chúng tôi đang hỏi cái gì là tương tự như:
+
+Chúng ta có thể trả lời câu hỏi này không? Chúng ta có thể sử dụng thủ thuật toán học đã học ở chương trước. Trừ giá trị kỳ vọng và chia cho sai số chuẩn để được biến ngẫu nhiên chuẩn hóa chuẩn, gọi nó là, bên trái. Từ là giá trị kỳ vọng vàlà lỗi tiêu chuẩn chúng tôi nhận được:
+
+Một vấn đề chúng tôi gặp phải là vì chúng tôi không biết, chúng tôi không biết
+. Nhưng hóa ra CLT vẫn hoạt động nếu chúng ta ước tính sai số chuẩn bằng cách sử dụng
+ thay cho. Chúng tôi nói rằng chúng tôi đưa vào ước tính. Do đó, ước tính của chúng tôi về sai số chuẩn là:Trong sách giáo khoa thống kê, chúng ta sử dụng một chiếc mũ nhỏ để biểu thị các ước tính. Ước tính có thể được xây dựng bằng cách sử dụng dữ liệu được quan sát và.
+Bây giờ chúng ta tiếp tục tính toán nhưng chia cho thay vì. Trong mẫu đầu tiên của chúng tôi, chúng tôi có 12 màu xanh và 13 màu đỏ và ước tính sai số chuẩn của chúng tôi là:
+```{r}
+x_hat <- 0.48
+se <- sqrt(x_hat*(1-x_hat)/25)
+se
+#> [1] 0.0999
+```
+
+Và bây giờ chúng ta có thể trả lời câu hỏi về xác suất gần với
+. Câu trả lời là:
+```{r}
+pnorm(0.01/se) - pnorm(-0.01/se)
+#> [1] 0.0797
+```
+Vì vậy, có rất ít khả năng chúng ta sẽ thân thiết. Một cuộc thăm dò ý kiến ​​chỉ
+ mọi người không thực sự hữu ích lắm, ít nhất là không cho một cuộc bầu cử sát nút.
+Trước đó chúng tôi đã đề cập đến mức độ sai sót. Bây giờ chúng ta có thể định nghĩa nó vì nó đơn giản gấp hai lần sai số chuẩn mà bây giờ chúng ta có thể ước tính. Trong trường hợp của chúng tôi đó là:
+```{r}
+1.96*se
+#> [1] 0.196
+```
+Do đó, có xác suất 95% rằng
+ sẽ ở trong
+, trong trường hợp của chúng tôi trong khoảng 0,2,
+. Lưu ý rằng 95% là một lựa chọn tùy ý và đôi khi các tỷ lệ phần trăm khác cũng được sử dụng, nhưng đó là giá trị được sử dụng phổ biến nhất để xác định biên độ sai số. Chúng tôi thường làm tròn 1,96 lên 2 để đơn giản cho việc trình bày.
+
+Tóm lại, CLT cho chúng ta biết rằng cuộc thăm dò của chúng tôi dựa trên cỡ mẫu là
+ không hữu ích lắm. Chúng tôi thực sự không học được nhiều khi biên độ sai sót quá lớn. Tất cả những gì chúng tôi thực sự có thể nói là số phiếu phổ thông sẽ không giành được với tỷ lệ chênh lệch lớn. Đây là lý do tại sao những người thăm dò ý kiến ​​có xu hướng sử dụng cỡ mẫu lớn hơn.
+
+Từ bảng trên, chúng ta thấy rằng cỡ mẫu điển hình nằm trong khoảng từ 700 đến 3500. Để xem điều này mang lại cho chúng ta kết quả thực tế hơn nhiều như thế nào, hãy lưu ý rằng nếu chúng ta thu được một
+= 0,48 với cỡ mẫu là 2.000, sai số chuẩn của chúng tôi
+ sẽ là 0,0111714. Vì vậy, kết quả của chúng tôi là ước tính 48% với sai số là 2%. Trong trường hợp này, kết quả mang lại nhiều thông tin hơn và khiến chúng ta nghĩ rằng có nhiều quả bóng màu đỏ hơn quả bóng màu xanh. Tuy nhiên, hãy nhớ rằng đây chỉ là giả thuyết. Chúng tôi đã không thực hiện cuộc thăm dò ý kiến ​​gồm 2.000 người vì chúng tôi không muốn làm hỏng cuộc thi.
+ 
+ 7.1 Mô phỏng Monte Carlo
+Giả sử chúng ta muốn sử dụng mô phỏng Monte Carlo để chứng thực các công cụ mà chúng ta đã xây dựng bằng lý thuyết xác suất. Để tạo mô phỏng, chúng ta sẽ viết mã như thế này:
+```{r}
+B <- 10000
+N <- 1000
+x_hat <- replicate(B, {
+  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1-p, p))
+  mean(x)
+})
+```
+
+Tất nhiên, vấn đề là chúng ta không biết p. Chúng ta có thể chế tạo một chiếc bình giống như hình trên và chạy mô phỏng tương tự (không cần máy tính). Sẽ mất nhiều thời gian, nhưng bạn có thể lấy 10.000 mẫu, đếm số hạt và theo dõi tỷ lệ của màu xanh lam. Chúng ta có thể sử dụng hàm take_poll(n=1000) thay vì lấy từ một chiếc bình thật, nhưng vẫn sẽ mất thời gian để đếm số hạt và nhập kết quả.
+
+Do đó, một điều chúng tôi làm để chứng thực các kết quả lý thuyết là chọn một hoặc một số giá trị của p và chạy mô phỏng. Hãy đặt p=0,45. Sau đó chúng ta có thể mô phỏng một cuộc thăm dò:
+
+```{r}
+p <- 0.45
+N <- 1000
+
+x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
+x_hat <- mean(x)
+```
+Trong mẫu cụ thể này, ước tính của chúng tôi là x_hat. Chúng ta có thể sử dụng mã đó để thực hiện mô phỏng Monte Carlo:
+```{r}
+B <- 10000
+x_hat <- replicate(B, {
+  x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
+  mean(x)
+})
+```
+Để xem xét lại, lý thuyết cho chúng ta biết rằng có phân phối xấp xỉ chuẩn, có giá trị kỳ vọng 0,45 và sai số chuẩn = 0,0157321. Mô phỏng xác nhận điều này:
+
+```{r}
+mean(x_hat)
+#> [1] 0.45
+sd(x_hat)
+#> [1] 0.0158
+```
+Biểu đồ và biểu đồ qq xác nhận rằng phép tính gần đúng thông thường cũng chính xác:
+Tất nhiên, trong đời thực, chúng ta sẽ không bao giờ có thể tiến hành một thí nghiệm như vậy vì chúng ta không biết. Nhưng chúng ta có thể chạy nó với nhiều giá trị khác nhau của
+ Và và thấy rằng lý thuyết này thực sự hoạt động tốt với hầu hết các giá trị. Bạn có thể dễ dàng thực hiện việc này bằng cách chạy lại đoạn mã trên sau khi thay đổi p và N.
+
+7.2 Sự lây lan
+Cạnh tranh là để dự đoán mức độ lây lan chứ không phải tỷ lệ. Tuy nhiên, vì chúng ta giả định chỉ có hai bên nên chúng ta biết rằng mức chênh lệch là. Kết quả là mọi thứ chúng tôi đã làm có thể dễ dàng được điều chỉnh cho phù hợp với ước tính. Một khi chúng tôi có ước tính của mình Và, chúng tôi ước tính mức chênh lệch với và vì chúng ta đang nhân với 2 nên sai số chuẩn là. Lưu ý rằng việc trừ 1 không thêm bất kỳ sự thay đổi nào nên nó không ảnh hưởng đến sai số chuẩn.
+
+Đối với mẫu 25 mục ở trên, ước tính của chúng tôi là 0,48 với sai số là 0,20 và ước tính của chúng tôi về mức chênh lệch là 0,04 với sai số là 0,40. Một lần nữa, đây không phải là cỡ mẫu hữu ích. Tuy nhiên, vấn đề là khi chúng ta có ước tính và sai số chuẩn cho, chúng tôi có nó để lây lan
+7.3 Xu hướng: tại sao không tổ chức một cuộc thăm dò thật lớn?
+Đối với các giá trị thực tế của
+, chẳng hạn từ 0,35 đến 0,65, nếu chúng ta thực hiện một cuộc thăm dò rất lớn với 100.000 người, lý thuyết cho chúng ta biết rằng chúng ta sẽ dự đoán cuộc bầu cử một cách hoàn hảo vì sai số lớn nhất có thể xảy ra là khoảng 0,3%:
+
+#> Cảnh báo: `qplot()` không được dùng nữa trong ggplot2 3.4.0.
+Một lý do là việc thực hiện một cuộc thăm dò như vậy rất tốn kém. Một lý do khác có thể quan trọng hơn là lý thuyết có những hạn chế của nó. Việc bỏ phiếu phức tạp hơn nhiều so với việc nhặt hạt từ một chiếc bình. Một số người có thể nói dối người thăm dò ý kiến ​​và những người khác có thể không có điện thoại. Nhưng có lẽ điểm quan trọng nhất mà một cuộc thăm dò thực tế khác với mô hình bình đựng tro cốt là ở chỗ chúng ta thực sự không biết chắc chắn ai thuộc nhóm dân số của mình và ai không. Làm sao chúng ta biết ai sẽ bỏ phiếu? Chúng ta có tiếp cận được tất cả các cử tri có thể không? Do đó, ngay cả khi biên độ sai số của chúng tôi là rất nhỏ thì có thể không chính xác khi giá trị kỳ vọng của chúng tôi là
+. Chúng tôi gọi đây là sự thiên vị. Về mặt lịch sử, chúng tôi quan sát thấy rằng các cuộc thăm dò thực sự có tính thiên vị, mặc dù không nhiều đến thế. Độ lệch điển hình dường như là khoảng 1-2%. Điều này làm cho việc dự báo bầu cử trở nên thú vị hơn một chút và chúng ta sẽ nói về cách lập mô hình này trong chương sau.
+8 khoảng tin cậy
+Khoảng tin cậy là một khái niệm rất hữu ích được các nhà phân tích dữ liệu sử dụng rộng rãi. Một phiên bản thường thấy của những thứ này đến từ hình học ggplot geom_smooth. Dưới đây là ví dụ sử dụng tập dữ liệu nhiệt độ có sẵn trong R:
+
+Trong phần Machine Learning, chúng ta sẽ tìm hiểu cách hình thành đường cong, nhưng bây giờ hãy xem xét vùng bóng mờ xung quanh đường cong. Điều này được tạo ra bằng cách sử dụng khái niệm khoảng tin cậy.
+
+Trong cuộc thi trước đây của chúng tôi, bạn được yêu cầu nghỉ giải lao. Nếu khoảng thời gian bạn gửi bao gồm
+, bạn sẽ nhận lại được một nửa số tiền đã chi cho "cuộc thăm dò ý kiến" của mình và chuyển sang giai đoạn tiếp theo của cuộc thi. Một cách để vượt qua vòng thứ hai là báo cáo một khoảng thời gian rất lớn. Ví dụ, khoảng
+ được đảm bảo bao gồm
+. Tuy nhiên, với khoảng cách lớn như vậy, chúng ta không có cơ hội giành chiến thắng trong cuộc thi. Tương tự, nếu bạn là người dự báo bầu cử và dự đoán tỷ lệ chênh lệch sẽ nằm trong khoảng từ -100% đến 100%, bạn sẽ bị chế giễu vì đã nêu ra điều hiển nhiên. Ngay cả một khoảng thời gian nhỏ hơn, chẳng hạn như nói rằng mức chênh lệch sẽ nằm trong khoảng từ -10 đến 10%, sẽ không được coi là nghiêm trọng.
+
+Mặt khác, khoảng thời gian chúng tôi báo cáo càng nhỏ thì cơ hội giành giải thưởng của chúng tôi càng nhỏ. Tương tự như vậy, một người thăm dò táo bạo báo cáo những khoảng thời gian rất nhỏ và hầu như không đạt mục tiêu sẽ không được coi là một người thăm dò giỏi. Chúng tôi muốn ở đâu đó ở giữa. Chúng ta có thể sử dụng lý thuyết thống kê đã học để tính xác suất của bất kỳ khoảng thời gian nào, bao gồm cả. Nếu chúng ta được yêu cầu tạo một khoảng với 95% cơ hội bao gồm, chúng ta cũng có thể làm được điều đó. Chúng được gọi là khoảng tin cậy 95%.
+Khi một người thăm dò báo cáo một ước tính và biên độ sai số, theo một cách nào đó, họ đang báo cáo khoảng tin cậy 95%. Hãy chỉ ra cách thức hoạt động của nó về mặt toán học.
+Chúng tôi muốn biết xác suất mà khoảng thời gian chứa tỷ lệ thực. Đầu tiên, hãy coi điểm bắt đầu và kết thúc của các khoảng này là các biến ngẫu nhiên: mỗi lần chúng ta lấy mẫu, chúng sẽ thay đổi. Để minh họa điều này, hãy chạy mô phỏng Monte Carlo ở trên hai lần. Chúng tôi sử dụng các tham số tương tự như trên:
+```{r}
+p <- 0.45
+N <- 1000
+```
+Và lưu ý rằng khoảng thời gian ở đây:
+```{r}
+x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1-p, p))
+x_hat <- mean(x)
+se_hat <- sqrt(x_hat * (1 - x_hat) / N)
+c(x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
+#> [1] 0.422 0.484
+```
+khác với cái này:
+```{r}
+x <- sample(c(0,1), size=N, replace=TRUE, prob=c(1-p, p))
+x_hat <- mean(x)
+se_hat <- sqrt(x_hat * (1 - x_hat) / N)
+c(x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
+#> [1] 0.451 0.513
+```
+
+Tiếp tục lấy mẫu và tạo khoảng thời gian và bạn sẽ thấy sự thay đổi ngẫu nhiên.
+Để xác định xác suất mà khoảng bao gồm, chúng ta cần tính toán:
+Bằng cách trừ và chia các đại lượng giống nhau cho tất cả các phần của phương trình, chúng ta thu được giá trị trên tương đương với:
+Số hạng ở giữa là một biến ngẫu nhiên xấp xỉ bình thường với giá trị kỳ vọng là 0 và sai số chuẩn 1, mà chúng ta đã ký hiệu là, vì vậy chúng tôi có:
+mà chúng ta có thể tính toán nhanh chóng bằng cách sử dụng:
+```{r}
+pnorm(1.96) - pnorm(-1.96)
+#> [1] 0.95
+```
+
+chứng minh rằng chúng ta có xác suất 95%.
+Nếu chúng ta muốn có xác suất lớn hơn, chẳng hạn như 99%, chúng ta cần nhân với bất kỳ số nào z thỏa mãn điều sau:
+Sử dụng:
+```{r}
+z <- qnorm(0.995)
+z
+#> [1] 2.58
+```
+
+sẽ đạt được điều này vì theo định nghĩa pnorm(qnorm(0,995)) là 0,995 và theo đối xứng pnorm(1-qnorm(0,995)) là 1 - 0,995. Kết quả là, chúng ta có điều đó:
+```{r}
+pnorm(z) - pnorm(-z)
+#> [1] 0.99
+```
+là 0,995 - 0,005 = 0,99.
+
+Chúng ta có thể sử dụng phương pháp này cho bất kỳ xác suất nào, không chỉ 0,95 và 0,99. Trong sách giáo khoa thống kê, chúng thường được viết cho bất kỳ xác suất nào như. Sau đó chúng ta có thể có được đối với phương trình trên sử dụng z = qnorm(1 - alpha / 2) vì.
+Vì vậy, ví dụ, đối với, và chúng tôi nhận được 1,96 mà chúng tôi đang sử dụng:
+```{r}
+qnorm(0.975)
+#> [1] 1.96
+```
+8.1 Mô phỏng Monte Carlo
+Chúng ta có thể chạy mô phỏng Monte Carlo để xác nhận rằng, trên thực tế, khoảng tin cậy 95% bao gồm 95% thời gian.
+```{r}
+N <- 1000
+B <- 10000
+inside <- replicate(B, {
+  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1-p, p))
+  x_hat <- mean(x)
+  se_hat <- sqrt(x_hat * (1 - x_hat) / N)
+  between(p, x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
+})
+mean(inside)
+#> [1] 0.948
+```
+Biểu đồ sau đây cho thấy 100 khoảng tin cậy đầu tiên. Trong trường hợp này, chúng tôi đã tạo mô phỏng để đường màu đen biểu thị tham số mà chúng tôi đang cố gắng ước tính:
+
+::: {.callout-note title = “Ngôn ngữ chính xác”}
+
+Khi sử dụng lý thuyết mà chúng tôi đã mô tả ở trên, điều quan trọng cần nhớ là các khoảng thời gian là ngẫu nhiên chứ không phải. Trong biểu đồ trên, chúng ta có thể thấy các khoảng ngẫu nhiên di chuyển xung quanh và, được biểu thị bằng đường thẳng đứng, giữ nguyên vị trí. Tỷ lệ màu xanh trong bình không phải. Vì vậy, 95% liên quan đến xác suất khoảng ngẫu nhiên này rơi vào. Nóicó 95% khả năng nằm giữa cái này và cái kia về mặt kỹ thuật là một tuyên bố không chính xác vì không phải là ngẫu nhiên. :::
+
+9 Kiểm định giả thuyết
+Trong các nghiên cứu khoa học, bạn sẽ thường thấy những cụm từ như “kết quả có ý nghĩa thống kê”. Điều này chỉ ra một kỹ thuật gọi là kiểm tra giả thuyết, trong đó chúng tôi sử dụng giá trị p, một loại xác suất, để kiểm tra giả định hoặc giả thuyết ban đầu của chúng tôi.
+
+Trong kiểm tra giả thuyết, thay vì đưa ra ước tính về tham số mà chúng tôi đang nghiên cứu, chúng tôi cung cấp xác suất dùng làm bằng chứng ủng hộ hoặc bác bỏ một giả thuyết cụ thể. Giả thuyết thường liên quan đến việc liệu một tham số có khác với giá trị được xác định trước hay không (thường là 0).
+
+Kiểm tra giả thuyết được sử dụng khi bạn có thể diễn đạt câu hỏi nghiên cứu của mình theo khía cạnh liệu một tham số có khác với giá trị được xác định trước này hay không. Nó được áp dụng trong nhiều lĩnh vực khác nhau, đặt ra những câu hỏi như: Thuốc có thể kéo dài sự sống của bệnh nhân ung thư không? Doanh số bán súng tăng có tương quan với bạo lực súng nhiều hơn không? Quy mô lớp học có ảnh hưởng đến điểm kiểm tra không?
+
+Lấy ví dụ được sử dụng trước đây với các hạt màu. Chúng ta có thể không quan tâm đến tỷ lệ chính xác của các hạt màu xanh mà thay vào đó hãy hỏi: Có nhiều hạt màu xanh hơn hạt màu đỏ không? Điều này có thể được diễn đạt lại thành câu hỏi liệu tỷ lệ hạt màu xanh có lớn hơn 0,5 hay không.
+
+Giả thuyết ban đầu cho rằng tham số bằng giá trị xác định trước được gọi là “giả thuyết null”. Nó phổ biến vì nó cho phép chúng ta tập trung vào các thuộc tính của dữ liệu trong kịch bản rỗng này. Sau khi dữ liệu được thu thập, chúng tôi ước tính tham số và tính giá trị p, đây là xác suất ước tính cực đoan như được quan sát nếu giả thuyết khống là đúng. Nếu giá trị p nhỏ, điều đó cho thấy giả thuyết không khó xảy ra và đưa ra bằng chứng chống lại giả thuyết đó.
+
+Chúng ta sẽ xem thêm các ví dụ về kiểm tra giả thuyết ở Chương 16.
+9,1 giá trị p
+Giả sử chúng ta lấy một mẫu ngẫu nhiên của và chúng tôi quan sát những hạt màu xanh, mang đến cho chúng ta. Điều này dường như chỉ ra sự tồn tại của nhiều hạt màu xanh hơn hạt màu đỏ vì 0,52 lớn hơn 0,5. Tuy nhiên, chúng tôi biết có cơ hội tham gia vào quá trình này và chúng tôi có thể đạt được điểm 52 ngay cả khi thực tế
+. Chúng ta gọi giả định đó là một giả thuyết vô giá trị. Giả thuyết không là giả thuyết của người hoài nghi.
+
+Chúng tôi đã quan sát thấy một biến ngẫu nhiên
+ và giá trị p là câu trả lời cho câu hỏi: khả năng nhìn thấy giá trị lớn như thế này là bao nhiêu khi giả thuyết khống là đúng? Nếu giá trị p đủ nhỏ, chúng tôi bác bỏ giả thuyết không và nói rằng kết quả có ý nghĩa thống kê.
+
+Giá trị p 0,05 là ngưỡng có ý nghĩa thống kê thường được sử dụng trong nhiều lĩnh vực nghiên cứu. Ngưỡng 0,01 cũng được sử dụng để xác định mức ý nghĩa cao. Việc lựa chọn 0,05 có phần tùy tiện và được nhà thống kê người Anh Ronald Fisher phổ biến vào những năm 1920. Chúng tôi khuyên bạn không nên sử dụng giới hạn mà không có lý do chính đáng và cố gắng tránh cụm từ có ý nghĩa thống kê.
+
+Để có được giá trị p cho ví dụ của chúng tôi, chúng tôi viết:
+giả sử. Theo giả thuyết không, chúng ta biết rằng:là tiêu chuẩn bình thường. Do đó chúng ta có thể tính xác suất ở trên, đó là giá trị p.
+
+```{r}
+N <- 100
+z <- sqrt(N)*0.02/0.5
+1 - (pnorm(z) - pnorm(-z))
+#> [1] 0.689
+```
+ 
+ Trong trường hợp này, thực tế có khả năng lớn là sẽ nhìn thấy 52 hoặc lớn hơn theo giả thuyết không.
+
+Hãy nhớ rằng có mối liên hệ chặt chẽ giữa giá trị p và khoảng tin cậy. Nếu khoảng tin cậy 95% của chênh lệch không bao gồm 0, chúng ta biết rằng giá trị p phải nhỏ hơn 0,05.
+
+Để tìm hiểu thêm về giá trị p, bạn có thể tham khảo bất kỳ sách giáo khoa thống kê nào. Tuy nhiên, nói chung, chúng tôi thích báo cáo khoảng tin cậy hơn giá trị p vì nó cho chúng tôi ý tưởng về quy mô của ước tính. Nếu chúng tôi chỉ báo cáo giá trị p thì chúng tôi không cung cấp thông tin nào về tầm quan trọng của phát hiện trong bối cảnh của vấn đề.
+
+Chúng ta có thể chứng minh một cách toán học rằng nếu
+Khoảng tin cậy % không chứa giá trị giả thuyết không, giả thuyết không bị bác bỏ với giá trị p nhỏ hơn hoặc nhỏ hơn
+. Vì vậy, ý nghĩa thống kê có thể được xác định từ khoảng tin cậy. Tuy nhiên, không giống như khoảng tin cậy, giá trị p không đưa ra ước tính về mức độ ảnh hưởng. Vì lý do này, chúng tôi khuyên bạn nên tránh sử dụng giá trị p bất cứ khi nào bạn có thể tính khoảng tin cậy.
+
+9.2 Nguồn điện
+Những người thăm dò ý kiến ​​không thành công trong việc đưa ra khoảng tin cậy chính xác mà chỉ thành công trong việc dự đoán ai sẽ thắng. Khi chúng tôi lấy cỡ mẫu 25 hạt, khoảng tin cậy cho mức chênh lệch:
+```{r}
+N <- 25
+x_hat <- 0.48
+(2 * x_hat - 1) + c(-1.96, 1.96) * 2 * sqrt(x_hat * (1 - x_hat) / N)
+#> [1] -0.432  0.352
+```
+
+bao gồm 0. Nếu đây là một cuộc thăm dò và chúng tôi buộc phải đưa ra tuyên bố, chúng tôi sẽ phải nói rằng đó là một cuộc “tung lên”.
+
+Một vấn đề với kết quả cuộc thăm dò ý kiến ​​của chúng tôi là với kích thước mẫu và giá trị của, chúng ta sẽ phải hy sinh xác suất của một cuộc gọi sai để tạo ra một khoảng không bao gồm 0.
+
+Điều này không có nghĩa là cuộc bầu cử đã gần kề. Nó chỉ có nghĩa là chúng tôi có cỡ mẫu nhỏ. Trong sách giáo khoa thống kê, điều này được gọi là thiếu sức mạnh. Trong bối cảnh các cuộc thăm dò, sức mạnh là xác suất phát hiện mức chênh lệch khác 0.
+
+Bằng cách tăng kích thước mẫu, chúng tôi giảm sai số chuẩn và do đó có cơ hội tốt hơn để phát hiện hướng lây lan.
+10 mô hình dựa trên dữ liệu
+“Tất cả các mô hình đều sai, nhưng một số mô hình lại hữu ích.” –George E. P. Box
+
+Cho đến nay, phân tích của chúng tôi về các kết quả liên quan đến cuộc thăm dò ý kiến ​​đều dựa trên mô hình lấy mẫu đơn giản. Mô hình này giả định rằng mỗi cử tri đều có cơ hội được chọn tham gia cuộc bầu cử như nhau, tương tự như việc nhặt những hạt từ một chiếc bình có hai màu. Tuy nhiên, trong chương này, chúng ta khám phá dữ liệu thực tế và phát hiện ra rằng mô hình này không chính xác. Thay vào đó, chúng tôi đề xuất một cách tiếp cận hiệu quả hơn trong đó chúng tôi trực tiếp lập mô hình kết quả của những người thăm dò ý kiến ​​thay vì bản thân các cuộc thăm dò.
+
+Một sự phát triển gần đây hơn kể từ phát minh ban đầu về thăm dò ý kiến, là việc sử dụng máy tính để tổng hợp dữ liệu có sẵn công khai từ các nguồn khác nhau nhằm phát triển các mô hình dự báo dựa trên dữ liệu. Ở đây chúng ta bắt đầu tìm hiểu cách các công cụ tổng hợp cuộc thăm dò thu thập và kết hợp dữ liệu được báo cáo bởi các chuyên gia khác nhau để đưa ra những dự đoán được cải thiện. Chúng tôi sẽ giới thiệu những ý tưởng đằng sau các mô hình thống kê được sử dụng để cải thiện dự báo bầu cử ngoài sức mạnh của các cuộc thăm dò ý kiến ​​cá nhân. Cụ thể, chúng tôi giới thiệu một mô hình hữu ích để xây dựng khoảng tin cậy cho sự khác biệt về số phiếu phổ thông.
+
+Điều quan trọng cần lưu ý là chương này chỉ cung cấp cái nhìn thoáng qua về lĩnh vực rộng lớn của các mô hình thống kê. Ví dụ: mô hình mà chúng tôi mô tả ở đây không cho phép chúng tôi chỉ định xác suất cho một ứng cử viên cụ thể giành được số phiếu phổ thông, như được thực hiện bởi các công cụ tổng hợp cuộc thăm dò phổ biến như FiveThirtyEight. Trong chương tiếp theo, chúng ta đi sâu vào các mô hình Bayesian, mô hình này cung cấp khuôn khổ toán học để đưa ra các nhận định xác suất như vậy. Hơn nữa, trong Chương #sec-tuyến tính-mô hình, chúng tôi thảo luận về các mô hình tuyến tính, được sử dụng rộng rãi trong mô hình thống kê. Tuy nhiên, những phần giới thiệu này chỉ là sơ sài và độc giả quan tâm đến mô hình thống kê nên bổ sung thêm tài liệu được trình bày trong cuốn sách này bằng các tài liệu tham khảo bổ sung.
+
+10.1 Nghiên cứu điển hình: công cụ tổng hợp cuộc thăm dò ý kiến
+Như chúng tôi đã mô tả trước đó, vài tuần trước cuộc bầu cử năm 2012, Nate Silver đã cho Obama cơ hội chiến thắng là 90%. Làm thế nào mà ông Silver lại tự tin đến vậy? Chúng tôi sẽ sử dụng mô phỏng Monte Carlo để minh họa những hiểu biết sâu sắc mà ông Silver đã có và những người khác đã bỏ lỡ. Để làm điều này, chúng tôi tạo ra kết quả cho 12 cuộc thăm dò được thực hiện vào tuần trước cuộc bầu cử. Chúng tôi mô phỏng kích thước mẫu từ các cuộc thăm dò thực tế, đồng thời xây dựng và báo cáo khoảng tin cậy 95% cho mỗi cuộc thăm dò trong số 12 cuộc thăm dò. Chúng tôi lưu kết quả từ mô phỏng này vào khung dữ liệu và thêm cột ID thăm dò ý kiến.
+
+```{r}
+library(tidyverse)
+library(dslabs)
+mu <- 0.039
+Ns <- c(1298, 533, 1342, 897, 774, 254, 812, 324, 1291, 1056, 2172, 516)
+p <- (mu + 1) / 2
+
+polls <- map_df(Ns, function(N) {
+  x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
+  x_hat <- mean(x)
+  se_hat <- sqrt(x_hat * (1 - x_hat) / N)
+  list(estimate = 2 * x_hat - 1, 
+    low = 2*(x_hat - 1.96*se_hat) - 1, 
+    high = 2*(x_hat + 1.96*se_hat) - 1,
+    sample_size = N)
+}) |> mutate(poll = seq_along(Ns))
+```
+Dưới đây là hình ảnh trực quan cho thấy khoảng thời gian mà những người thăm dò ý kiến ​​sẽ báo cáo về sự khác biệt giữa Obama và Romney:
+Không có gì ngạc nhiên khi tất cả 12 cuộc thăm dò đều báo cáo khoảng tin cậy bao gồm kết quả của đêm bầu cử (đường đứt nét). Tuy nhiên, tất cả 12 cuộc thăm dò cũng bao gồm 0 (đường liền nét màu đen). Do đó, nếu được yêu cầu đưa ra dự đoán riêng lẻ, những người thăm dò ý kiến ​​sẽ phải nói: đó là một sự thất bại. Dưới đây chúng tôi mô tả một cái nhìn sâu sắc quan trọng mà họ đang thiếu.
+
+Các nhà tổng hợp cuộc thăm dò, chẳng hạn như Nate Silver, nhận ra rằng bằng cách kết hợp kết quả của các cuộc thăm dò khác nhau, bạn có thể cải thiện đáng kể độ chính xác. Bằng cách này, chúng tôi đang tiến hành một cuộc thăm dò ý kiến ​​với quy mô mẫu khổng lồ một cách hiệu quả. Do đó, chúng tôi có thể báo cáo khoảng tin cậy 95% nhỏ hơn và dự đoán chính xác hơn.
+
+Mặc dù với tư cách là người tổng hợp, chúng tôi không có quyền truy cập vào dữ liệu thăm dò thô, nhưng chúng tôi có thể sử dụng toán học để xây dựng lại những gì chúng tôi có thể thu được nếu thực hiện một cuộc thăm dò lớn với:
+
+```{r}
+sum(polls$sample_size)
+#> [1] 11269
+```
+
+những người tham gia. Về cơ bản, chúng tôi xây dựng một ước tính về mức chênh lệch, hãy gọi nó la, với giá trị trung bình có trọng số như sau:
+```{r}
+mu_hat <- polls |> 
+  summarize(avg = sum(estimate*sample_size) / sum(sample_size)) |> 
+  pull(avg)
+```
+
+Một khi chúng ta có ước tính về
+, chúng ta có thể xây dựng ước tính về tỷ lệ bỏ phiếu cho Obama, sau đó chúng ta có thể sử dụng ước tính này để ước tính sai số chuẩn. Khi thực hiện việc này, chúng tôi thấy rằng biên độ sai số của chúng tôi là 0,0184545.
+
+Do đó, chúng ta có thể dự đoán rằng mức chênh lệch sẽ là 3,1 cộng hoặc trừ 1,8, không chỉ bao gồm kết quả thực tế mà chúng ta đã quan sát được vào đêm bầu cử mà còn khá xa so với việc bao gồm 0. Khi chúng ta kết hợp 12 cuộc thăm dò, chúng ta khá chắc chắn rằng Obama sẽ giành được số phiếu phổ thông.
+
+Tuy nhiên, đây chỉ là mô phỏng để minh họa cho ý tưởng này. Hãy nhìn vào dữ liệu thực tế từ cuộc bầu cử tổng thống năm 2016. Cụ thể, tập hợp con sau đây của dữ liệu polls_us_election_2016 trong dslab bao gồm kết quả của các cuộc thăm dò cấp quốc gia cũng như các cuộc thăm dò cấp bang, được thực hiện trong năm trước cuộc bầu cử và do FiveThirtyEight tổ chức. Đối với ví dụ đầu tiên này, chúng tôi sẽ lọc dữ liệu để bao gồm các cuộc thăm dò quốc gia được thực hiện trong tuần trước cuộc bầu cử. Chúng tôi cũng xóa các cuộc thăm dò mà FiveThirtyEight đã xác định là không đáng tin cậy và được xếp loại “B” trở xuống. Một số cuộc thăm dò chưa được chấm điểm và chúng tôi bao gồm những cuộc thăm dò đó:
+
+```{r}
+library(dslabs)
+polls <- polls_us_election_2016 |> 
+  filter(state == "U.S." & enddate >= "2016-10-31" &
+           (grade %in% c("A+","A","A-","B+") | is.na(grade)))
+```
+
+Chúng tôi thêm một ước tính chênh lệch:
+```{r}
+polls <- polls |> 
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+```
+Trong ví dụ này, chúng ta sẽ giả định rằng chỉ có hai bên và gọi
+ tỷ lệ bỏ phiếu cho Clinton và
+ tỷ lệ bỏ phiếu cho Trump. Chúng tôi quan tâm đến sự lan truyền
+. Hãy gọi sự lây lan
+ (vì sự khác biệt).
+
+Chúng tôi có 49 ước tính về mức chênh lệch. Lý thuyết mà chúng ta học được từ các mô hình lấy mẫu cho chúng ta biết rằng những ước tính này là một biến ngẫu nhiên có phân bố xác suất gần như bình thường. Giá trị kỳ vọng là đêm bầu cử lan rộng
+ và sai số chuẩn là
+. Giả sử mô hình chiếc bình mà chúng tôi mô tả trước đó là một mô hình tốt, chúng tôi có thể sử dụng thông tin này để xây dựng khoảng tin cậy dựa trên dữ liệu tổng hợp. Mức chênh lệch ước tính là:
+
+```{r}
+mu_hat <- polls |> 
+  summarize(mu_hat = sum(spread * samplesize) / sum(samplesize)) |> 
+  pull(mu_hat)
+```
+và lỗi tiêu chuẩn là:
+```{r}
+p_hat <- (mu_hat + 1)/2 
+moe <- 1.96 * 2 * sqrt(p_hat * (1 - p_hat) / sum(polls$samplesize))
+moe
+#> [1] 0.00662
+```
+
+Vì vậy, chúng tôi báo cáo mức chênh lệch là 1,43% với sai số là 0,66%. Vào đêm bầu cử, chúng tôi phát hiện ra rằng tỷ lệ thực tế là 2,1%, nằm ngoài khoảng tin cậy 95%. Chuyện gì đã xảy ra thế?
+
+Biểu đồ chênh lệch giá được báo cáo cho thấy có vấn đề:
+```{r}
+polls |> ggplot(aes(spread)) + geom_histogram(color = "black", binwidth = .01)
+```
+Dữ liệu dường như không được phân phối bình thường và sai số chuẩn dường như lớn hơn 0,0066232. Lý thuyết này không áp dụng được ở đây và trong phần tiếp theo chúng tôi sẽ mô tả một mô hình hữu ích dựa trên dữ liệu.
+
+10.2 Ngoài mô hình lấy mẫu đơn giản
+Lưu ý rằng dữ liệu đến từ nhiều người thăm dò khác nhau và một số người thực hiện nhiều cuộc thăm dò mỗi tuần:
+
+```{r}
+polls |> group_by(pollster) |> summarize(n())
+#> # A tibble: 15 × 2
+#>   pollster                                                   `n()`
+#>   <fct>                                                      <int>
+#> 1 ABC News/Washington Post                                       7
+#> 2 Angus Reid Global                                              1
+#> 3 CBS News/New York Times                                        2
+#> 4 Fox News/Anderson Robbins Research/Shaw & Company Research     2
+#> 5 IBD/TIPP                                                       8
+#> # ℹ 10 more rows
+```
+
+Hãy hình dung dữ liệu về những người thăm dò ý kiến ​​thường xuyên bỏ phiếu:
+Biểu đồ này tiết lộ một kết quả bất ngờ. Đầu tiên, hãy xem xét rằng sai số chuẩn được dự đoán theo lý thuyết cho mỗi cuộc thăm dò ý kiến ​​là từ 0,018 đến 0,033:
+
+```{r}
+polls |> group_by(pollster) |> 
+  filter(n() >= 6) |>
+  summarize(se = 2 * sqrt(p_hat * (1 - p_hat) / median(samplesize)))
+#> # A tibble: 5 × 2
+#>   pollster                     se
+#>   <fct>                     <dbl>
+#> 1 ABC News/Washington Post 0.0265
+#> 2 IBD/TIPP                 0.0333
+#> 3 Ipsos                    0.0225
+#> 4 The Times-Picayune/Lucid 0.0196
+#> 5 USC Dornsife/LA Times    0.0183
+```
+
+Điều này phù hợp với biến thể cuộc thăm dò bên trong mà chúng tôi thấy. Tuy nhiên, dường như có sự khác biệt giữa các cuộc thăm dò. Ví dụ: hãy lưu ý cách nhà thăm dò USC Dornsife/LA Times dự đoán tỷ lệ thắng 4% cho Trump, trong khi Ipsos dự đoán tỷ lệ thắng lớn hơn 5% cho Clinton. Lý thuyết mà chúng tôi đã học không nói gì về việc những người thăm dò khác nhau tạo ra các cuộc thăm dò với các giá trị kỳ vọng khác nhau: tất cả các cuộc thăm dò phải có cùng một giá trị kỳ vọng. FiveThirtyEight coi những khác biệt này là hiệu ứng nhà cái. Chúng tôi còn gọi đó là sự thiên vị của người thăm dò ý kiến. Không có gì trong mô hình chiếc bình đơn giản của chúng tôi đưa ra lời giải thích cho những khác biệt giữa người thăm dò ý kiến ​​với người thăm dò ý kiến. Sự mô tả sai mô hình này đã dẫn đến một khoảng thời gian quá tự tin và cuối cùng không bao gồm kết quả của cuộc bầu cử vào đêm hôm đó. Vì vậy, thay vì lập mô hình quá trình tạo ra các giá trị này bằng mô hình bình đựng tro cốt, chúng tôi lập mô hình trực tiếp kết quả của người thăm dò ý kiến. Để làm điều này, chúng tôi bắt đầu bằng cách thu thập một số dữ liệu. Cụ thể, đối với mỗi người thăm dò ý kiến, chúng tôi xem xét kết quả được báo cáo gần đây nhất trước cuộc bầu cử:
+
+```{r}
+one_poll_per_pollster <- polls |> group_by(pollster) |> 
+  filter(enddate == max(enddate)) |>
+  ungroup()
+```
+Dưới đây là biểu đồ dữ liệu của 15 người thăm dò ý kiến ​​này:
+
+```{r}
+qplot(spread, data = one_poll_per_pollster, binwidth = 0.01)
+#> Warning: `qplot()` was deprecated in ggplot2 3.4.0.
+```
+
+Mặc dù chúng tôi không còn sử dụng mô hình có hạt màu đỏ (Cộng hòa) và xanh lam (Đảng Dân chủ) trong bình đựng tro cốt, mô hình mới của chúng tôi cũng có thể được coi là chế độ bình đựng tro cốt nhưng chứa kết quả thăm dò ý kiến ​​từ tất cả những người thăm dò ý kiến ​​có thể có và hãy nghĩ đến $N= của chúng tôi điểm dữ liệu $15
+ a như một mẫu ngẫu nhiên từ chiếc bình này. Để phát triển một mô hình hữu ích, chúng tôi giả định rằng giá trị kỳ vọng của chiếc bình của chúng tôi là mức chênh lệch thực tế
+, ngụ ý rằng trung bình mẫu có giá trị kỳ vọng.
+
+Bây giờ, vì thay vì 0 và 1, chiếc bình của chúng ta chứa các số liên tục nên độ lệch chuẩn của chiếc bình không còn nữa. Thay vì mức độ biến thiên trong việc lấy mẫu của cử tri, lỗi tiêu chuẩn hiện bao gồm mức độ biến thiên giữa người thăm dò ý kiến. Chiếc bình mới của chúng tôi cũng bao gồm khả năng biến thiên lấy mẫu từ cuộc bỏ phiếu. Bất chấp điều đó, độ lệch chuẩn này hiện là một tham số chưa xác định. Trong sách giáo khoa thống kê, ký hiệu Hy Lạp được sử dụng để đại diện cho tham số này.
+
+Vì vậy, mô hình thống kê mới của chúng tôi là một mẫu ngẫu nhiên với kỳ vọng
+ và độ lệch chuẩn. Hiện tại, việc phân phối vẫn chưa được xác định. Nhưng chúng tôi xem xét
+ đủ lớn để giả định rằng trung bình mẫu tuân theo phân phối chuẩn với giá trị kỳ vọng
+ và sai số chuẩn. Chúng tôi viết
+Đây là ký hiệu cho chúng ta biết biến ngẫu nhiên ở bên trái ký hiệu tuân theo phân phối ở bên phải. Chúng tôi sử dụng ký hiệu để biểu diễn phân phối chuẩn với giá trị trung bình
+ và độ lệch chuẩn
+.
+Mô hình trung bình mẫu này sẽ được sử dụng lại ở chương tiếp theo.
+10.2.1 Ước tính độ lệch chuẩn
+Mô hình chúng tôi đã chỉ định có hai tham số chưa xác định: giá trị mong đợi và độ lệch chuẩn. Chúng ta biết rằng trung bình mẫu sẽ là ước tính của chúng tôi về. Nhưng còn?
+
+Nhiệm vụ của chúng ta là ước tính. Bởi vì chúng tôi lập mô hình các giá trị quan sát được
+ dưới dạng mẫu ngẫu nhiên từ bình đựng mẫu, với cỡ mẫu đủ lớn, phân bố xác suất của trung bình mẫu xấp xỉ bình thường với giá trị kỳ vọng và sai số chuẩn. Nếu chúng ta sẵn lòng xem xét đủ lớn, chúng ta có thể sử dụng điều này để xây dựng khoảng tin cậy.
+
+Lý thuyết cho chúng ta biết rằng chúng ta có thể ước tính mô hình chiếc bình với độ lệch chuẩn mẫu được xác định là
+
+Lưu ý rằng không giống như định nghĩa về độ lệch chuẩn của tổng thể, bây giờ chúng ta chia cho. Điều này làm cho một ước tính tốt hơn về. Có một lời giải thích toán học cho điều này, được giải thích trong hầu hết các sách giáo khoa thống kê, nhưng chúng tôi không đề cập đến nó ở đây.
+
+Hàm sd trong R tính độ lệch chuẩn mẫu:
+```{r}
+sd(one_poll_per_pollster$spread)
+#> [1] 0.0242
+```
+
+10.2.2 Tính khoảng tin cậy
+Hiện tại, chúng tôi đã sẵn sàng hình thành khoảng tin cậy mới dựa trên mô hình dựa trên dữ liệu mới của mình:
+
+```{r}
+results <- one_poll_per_pollster |> 
+  summarize(avg = mean(spread), 
+            se = sd(spread) / sqrt(length(spread))) |> 
+  mutate(start = avg - 1.96 * se, 
+         end = avg + 1.96 * se) 
+round(results * 100, 1)
+#>   avg  se start end
+#> 1 2.9 0.6   1.7 4.1
+```
+
+Khoảng tin cậy của chúng tôi hiện đã rộng hơn vì nó kết hợp tính biến thiên của người thăm dò ý kiến. Nó bao gồm kết quả đêm bầu cử là 2,1%. Ngoài ra, hãy lưu ý rằng nó đủ nhỏ để không bao gồm 0, điều đó có nghĩa là chúng tôi tin tưởng Clinton sẽ giành được số phiếu phổ thông.
+
+10.2.3 Phân phối t
+Ở trên chúng tôi đã sử dụng CLT với cỡ mẫu là 15. Bởi vì chúng tôi đang ước tính tham số thứ hai
+, sự thay đổi hơn nữa được đưa vào khoảng tin cậy của chúng tôi dẫn đến khoảng thời gian quá nhỏ. Đối với cỡ mẫu rất lớn, độ biến thiên bổ sung này là không đáng kể, nhưng nói chung, đối với các giá trị nhỏ hơn 30, chúng ta cần thận trọng khi sử dụng CLT. Tuy nhiên, nếu dữ liệu trong bình được biết là tuân theo phân phối chuẩn thì chúng ta thực sự có lý thuyết toán học cho chúng ta biết chúng ta cần tạo các khoảng lớn hơn bao nhiêu để tính toán cho ước tính của
+. Sử dụng lý thuyết này, chúng ta có thể xây dựng khoảng tin cậy cho bất kỳ
+. Nhưng một lần nữa, điều này chỉ hoạt động nếu dữ liệu trong bình được biết là tuân theo phân phối chuẩn. Vì vậy, đối với dữ liệu 0, 1 của mô hình chiếc bình trước đây của chúng tôi, lý thuyết này chắc chắn không áp dụng được.
+
+Thống kê về khoảng tin cậy cho dựa trên là CLT cho chúng ta biết rằng Z có phân phối xấp xỉ chuẩn với giá trị kỳ vọng 0 và sai số chuẩn 1. Nhưng trong thực tế chúng ta không biết
+ vì vậy chúng tôi sử dụng:
+
+Điều này được gọi là một thống kê t. Bằng cách thay thế với chúng tôi giới thiệu một số biến thể. Lý thuyết cho chúng ta biết rằng tuân theo phân phối t của sinh viên với
+ bậc tự do. Bậc tự do là một tham số kiểm soát sự biến thiên thông qua các đuôi béo hơn:
+
+Nếu chúng ta sẵn sàng giả định rằng dữ liệu về hiệu ứng người thăm dò ý kiến ​​có phân phối chuẩn, dựa trên dữ liệu mẫu
+```{r}
+one_poll_per_pollster |>
+  ggplot(aes(sample = spread)) + stat_qq()
+```
+sau đó tuân theo phân phối t vớibậc tự do. Vì vậy có lẽ khoảng tin cậy tốt hơn cho
+ là:
+```{r}
+z <- qt(0.975,  nrow(one_poll_per_pollster) - 1)
+one_poll_per_pollster |> 
+  summarize(avg = mean(spread), moe = z*sd(spread)/sqrt(length(spread))) |> 
+  mutate(start = avg - moe, end = avg + moe) 
+#> # A tibble: 1 × 4
+#>      avg    moe  start    end
+#>    <dbl>  <dbl>  <dbl>  <dbl>
+#> 1 0.0290 0.0134 0.0156 0.0424
+```
+ 
+ Lớn hơn một chút so với cái sử dụng bình thường là
+```{r}
+qt(0.975, 14)
+#> [1] 2.14
+```
+ 
+nó lớn hơn
+
+```{r}
+qnorm(0.975)
+#> [1] 1.96
+```
+Lưu ý rằng việc sử dụng phân phối t và thống kê t là cơ sở cho kiểm định t, phương pháp được sử dụng rộng rãi để tính giá trị p. Để tìm hiểu thêm về bài kiểm tra t, bạn có thể tham khảo bất kỳ sách giáo khoa thống kê nào.
+
+Phân phối t cũng có thể được sử dụng để mô hình hóa các lỗi có độ lệch lớn hơn có nhiều khả năng xảy ra hơn so với phân phối chuẩn, như đã thấy trong mật độ mà chúng ta đã thấy trước đây. Fivethirtyeight sử dụng phân phối t để tạo ra các lỗi mô hình hóa tốt hơn những sai lệch mà chúng ta thấy trong dữ liệu bầu cử. Ví dụ, ở Wisconsin, tỷ lệ trung bình của sáu cuộc thăm dò là 7% ủng hộ Clinton với độ lệch chuẩn là 1%, nhưng Trump đã thắng 0,7%. Ngay cả sau khi tính đến độ lệch tổng thể, phần dư 7,7% này vẫn phù hợp với dữ liệu phân phối t hơn là phân phối chuẩn.
+
+```{r}
+polls_us_election_2016 |>
+  filter(state == "Wisconsin" &
+           enddate >= "2016-10-31" & 
+           (grade %in% c("A+", "A", "A-", "B+") | is.na(grade))) |>
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) |>
+  mutate(state = as.character(state)) |>
+  left_join(results_us_election_2016, by = "state") |>
+  mutate(actual = clinton/100 - trump/100) |>
+  summarize(actual = first(actual), avg = mean(spread), 
+            sd = sd(spread), n = n()) |>
+  select(actual, avg, sd, n)
+#>   actual    avg     sd n
+#> 1 -0.007 0.0711 0.0104 6
+```
+11 Thống kê Bayes
+Vào năm 2016, FiveThirtyEight đã hiển thị biểu đồ này mô tả sự phân bổ phần trăm số phiếu phổ thông cho mỗi ứng cử viên:
+
+Các vùng màu đại diện cho các giá trị có 80% cơ hội bao gồm kết quả thực tế, theo mô hình FiveThirtyEight.
+Nhưng điều này có ý nghĩa gì trong bối cảnh lý thuyết mà chúng ta đã đề cập trong đó những tỷ lệ phần trăm này được coi là cố định. Hơn nữa, các nhà dự báo bầu cử còn đưa ra những tuyên bố mang tính xác suất như “Obama có 90% cơ hội thắng cử”. Lưu ý rằng trong bối cảnh của mô hình chiếc bình, điều này tương đương với việc phát biểu rằng xác suất
+ là 90%. Tuy nhiên, mẫu bình là một tham số cố định và không có ý nghĩa gì khi nói về xác suất. Với thống kê Bayesian, chúng tôi lập mô hìnhlà biến ngẫu nhiên và do đó tuyên bố như “90% cơ hội chiến thắng” phù hợp với phương pháp toán học. Các nhà dự báo cũng sử dụng các mô hình để mô tả sự biến đổi ở các cấp độ khác nhau. Ví dụ: độ biến thiên của việc lấy mẫu, độ biến thiên của người thăm dò ý kiến, độ biến thiên hàng ngày và độ biến thiên của cuộc bầu cử. Một trong những cách tiếp cận thành công nhất được sử dụng cho việc này là các mô hình phân cấp, có thể được giải thích trong bối cảnh thống kê Bayes.
+ 
+ Trong chương này chúng tôi mô tả ngắn gọn thống kê Bayes. Chúng tôi sử dụng ba nghiên cứu điển hình, 1) diễn giải các xét nghiệm chẩn đoán cho một căn bệnh hiếm gặp, 2) dự đoán thành tích của một vận động viên và 3) ước tính xác suất Hillary Clinton giành chiến thắng vào năm 2016 bằng cách sử dụng dữ liệu thăm dò trước bầu cử. Để nghiên cứu sâu hơn về chủ đề này, chúng tôi đề xuất một trong những sách giáo khoa sau:
+
+Berger JO (1985). Lý thuyết quyết định thống kê và phân tích Bayes, tái bản lần thứ 2. Springer-Verlag.
+
+Thủ tướng Lee (1989). Thống kê Bayes: Giới thiệu. Oxford.
+
+11.1 Định lý Bayes
+Chúng ta bắt đầu bằng việc mô tả định lý Bayes. Chúng tôi thực hiện điều này bằng cách sử dụng xét nghiệm xơ nang giả định làm ví dụ. Giả sử xét nghiệm bệnh xơ nang có độ chính xác là 99%. Chúng ta sẽ sử dụng ký hiệu sau:
+với
+có nghĩa là một bài kiểm tra tích cực và
+đại diện cho việc bạn thực sự mắc bệnh (1) hay không (0).
+
+Giả sử chúng ta chọn một người ngẫu nhiên và họ có kết quả dương tính. Xác suất họ mắc bệnh là bao nhiêu? Chúng tôi viết điều này như Tỷ lệ xơ nang là 1 trên 3.900, điều này ngụ ý rằng. Để trả lời câu hỏi này, chúng ta sẽ sử dụng định lý Bayes, định lý này nói chung cho chúng ta biết rằng:
+Phương trình này áp dụng cho bài toán của chúng ta trở thành:
+Cắm số vào ta được:
+
+Điều này nói lên rằng mặc dù xét nghiệm có độ chính xác 0,99 nhưng xác suất mắc bệnh cho kết quả xét nghiệm dương tính chỉ là 0,02. Điều này có vẻ phản trực giác đối với một số người, nhưng lý do của trường hợp này là vì chúng ta phải tính đến khả năng rất hiếm là một người, được chọn ngẫu nhiên, mắc bệnh. Để minh họa điều này, chúng tôi chạy mô phỏng Monte Carlo.
+
+11.1.1 Mô phỏng định lý Bayes
+Mô phỏng sau đây nhằm giúp bạn hình dung định lý Bayes. Chúng tôi bắt đầu bằng cách chọn ngẫu nhiên 100.000 người từ một quần thể trong đó căn bệnh được đề cập có tỷ lệ lưu hành là 1 trên 4.000.
+
+```{r}
+prev <- 0.00025
+N <- 100000
+outcome <- sample(c("Disease","Healthy"), N, replace = TRUE, 
+                  prob = c(prev, 1 - prev))
+```
+
+ Lưu ý có rất ít người mắc bệnh:
+ 
+```{r}
+N_D <- sum(outcome == "Disease")
+N_D
+#> [1] 23
+N_H <- sum(outcome == "Healthy")
+N_H
+#> [1] 99977
+```
+ Ngoài ra, có nhiều người không mắc bệnh, điều này khiến chúng ta có nhiều khả năng sẽ thấy một số kết quả dương tính giả do xét nghiệm không hoàn hảo. Bây giờ mỗi người đều nhận được bài kiểm tra, kết quả này đúng 99%:
+ 
+```{r}
+accuracy <- 0.99
+test <- vector("character", N)
+test[outcome == "Disease"]  <- sample(c("+", "-"), N_D, replace = TRUE, 
+                                    prob = c(accuracy, 1 - accuracy))
+test[outcome == "Healthy"]  <- sample(c("-", "+"), N_H, replace = TRUE, 
+                                    prob = c(accuracy, 1 - accuracy))
+```
+ 
+ Bởi vì có nhiều đối chứng hơn số ca bệnh, ngay cả với tỷ lệ dương tính giả thấp, chúng tôi vẫn thu được nhiều đối chứng hơn so với các trường hợp trong nhóm có kết quả xét nghiệm dương tính:
+ 
+```{r}
+table(outcome, test)
+#>          test
+#> outcome       -     +
+#>   Disease     0    23
+#>   Healthy 99012   965
+```
+ 
+Từ bảng này, chúng ta thấy rằng tỷ lệ xét nghiệm dương tính mắc bệnh là 23 trên 988. Chúng ta có thể chạy đi chạy lại bảng này để thấy rằng trên thực tế, xác suất hội tụ đến khoảng 0,022.
+
+11.2 Khoảng trước, sau và khoảng tin cậy
+Trong chương trước, chúng tôi ước tính và biên độ sai số về sự khác biệt về số phiếu phổ thông giữa Hillary Clinton và Donald Trump, mà chúng tôi ký hiệu bằng
+. Ước tính nằm trong khoảng từ 2 đến 3 phần trăm và khoảng tin cậy không bao gồm 0. Một nhà dự báo sẽ sử dụng điều này để dự đoán Hillary Clinton sẽ giành được số phiếu phổ thông. Nhưng để đưa ra tuyên bố xác suất về việc thắng cử, chúng ta cần sử dụng phương pháp Bayes.
+
+Chúng tôi bắt đầu phương pháp Bayesian bằng cách định lượng kiến ​​thức của mình trước khi xem bất kỳ dữ liệu nào. Điều này được thực hiện bằng cách sử dụng phân phối xác suất được coi là trước đó. Ví dụ của chúng tôi, chúng tôi có thể viết:
+
+Chúng ta có thể nghĩ đến
+ như dự đoán tốt nhất của chúng tôi về chênh lệch số phiếu phổ thông nếu chúng tôi không thấy bất kỳ dữ liệu bỏ phiếu nào và chúng tôi có thể nghĩ ra
+ như định lượng mức độ chắc chắn của chúng ta về phỏng đoán này. Nói chung, nếu chúng ta có kiến ​​thức chuyên môn liên quan đến
+, chúng ta có thể cố gắng định lượng nó bằng cách phân phối trước đó. Trong trường hợp thăm dò bầu cử, các chuyên gia sử dụng các nguyên tắc cơ bản, chẳng hạn như tình trạng của nền kinh tế, để phát triển các phân bổ trước đó. Dữ liệu được sử dụng để cập nhật dự đoán ban đầu hoặc niềm tin trước đó của chúng tôi. Điều này có thể được thực hiện bằng toán học nếu chúng ta xác định phân bố cho dữ liệu được quan sát, cho bất kỳ
+. Trong ví dụ cụ thể của chúng tôi, chúng tôi sẽ viết ra một mô hình trung bình của các cuộc thăm dò ý kiến, giống như trước đây:
+Như trước,
+ mô tả tính ngẫu nhiên do lấy mẫu và hiệu ứng thăm dò ý kiến. Trong bối cảnh Bayesian, điều này được gọi là phân phối lấy mẫu. Lưu ý rằng chúng tôi viết điều kiện
+ bởi vì
+ hiện được coi là một biến ngẫu nhiên.
+
+Chúng tôi không hiển thị các dẫn xuất ở đây, nhưng bây giờ chúng tôi có thể sử dụng Giải tích và một phiên bản của Định lý Bayes để suy ra phân bố của
+ có điều kiện của dữ liệu, được gọi là phân phối sau. Đặc biệt chúng ta có thể hiển thị
+ tuân theo phân phối chuẩn với giá trị kỳ vọng:
+và lỗi tiêu chuẩn:
+
+Lưu ý rằng giá trị kỳ vọng là giá trị trung bình có trọng số của dự đoán trước đó của chúng tôi
+ và số liệu quan sát được
+. Trọng số phụ thuộc vào mức độ chắc chắn của chúng ta về niềm tin trước đây của mình, được định lượng bằng
+, và độ chính xác
+ về bản tóm tắt dữ liệu được quan sát của chúng tôi. Mức trung bình có trọng số này đôi khi được gọi là thu hẹp vì nó thu nhỏ các ước tính về giá trị trước đó.
+
+Những đại lượng này hữu ích cho việc cập nhật niềm tin của chúng tôi. Cụ thể, chúng tôi sử dụng phân phối sau không chỉ để tính giá trị kỳ vọng của
+ với dữ liệu được quan sát, nhưng với bất kỳ xác suất nào
+ chúng ta có thể xây dựng các khoảng, tập trung vào ước tính của chúng ta và với
+ cơ hội xảy ra.
+
+Để tính toán phân phối sau và xây dựng khoảng tin cậy, chúng tôi xác định phân phối trước với giá trị trung bình 0% và sai số chuẩn 3,5% có thể được hiểu là: trước khi thu thập dữ liệu thăm dò ý kiến, chúng tôi không nghĩ bất kỳ ứng cử viên nào có lợi thế và sự khác biệt về lên đến 7% một trong hai cách là có thể. Chúng tôi tính toán phân phối sau bằng các phương trình trên:
+```{r}
+theta <- 0
+tau <- 0.035
+sigma <- results$se
+x_bar <- results$avg
+B <- sigma^2 / (sigma^2 + tau^2)
+
+posterior_mean <- B*theta + (1 - B)*x_bar
+posterior_se <- sqrt(1/(1/sigma^2 + 1/tau^2))
+
+posterior_mean
+#> [1] 0.0281
+posterior_se
+#> [1] 0.00615
+```
+
+Bởi vì chúng ta biết phân phối sau trong chuẩn tắc nên chúng ta có thể xây dựng một khoảng tin cậy như thế này:
+
+```{r}
+posterior_mean + c(-1, 1) * qnorm(0.975) * posterior_se
+#> [1] 0.0160 0.0401
+```
+Hơn nữa, giờ đây chúng ta có thể đưa ra tuyên bố xác suất mà chúng ta không thể thực hiện được bằng cách tiếp cận theo chủ nghĩa thường xuyên bằng cách tính toán xác suất hậu nghiệm để Hillary giành được số phiếu phổ thông. Đặc biệt,
+ có thể được tính như thế này:
+ 
+```{r}
+1 - pnorm(0, posterior_mean, posterior_se)
+#> [1] 1
+```
+ Điều này cho thấy chúng ta chắc chắn 100% rằng Clinton sẽ giành được số phiếu phổ thông, điều này có vẻ quá tự tin. Ngoài ra, nó không phù hợp với 81,4% của FiveThirtyEight. Điều gì giải thích sự khác biệt này? Có một mức độ không chắc chắn mà chúng tôi chưa mô tả và chúng tôi sẽ quay lại vấn đề đó ở Chương 12.
+ 
+ 12 mô hình phân cấp
+Các mô hình phân cấp rất hữu ích cho việc định lượng các mức độ biến đổi hoặc độ không chắc chắn khác nhau. Người ta có thể sử dụng chúng bằng cách sử dụng khung Bayesian hoặc Người theo chủ nghĩa thường xuyên. Tuy nhiên, vì trong khung Thường xuyên, họ thường mở rộng mô hình với một tham số cố định bằng cách giả sử tham số đó thực sự là ngẫu nhiên, nên mô tả mô hình bao gồm hai phân phối trông giống như phân phối trước và phân phối lấy mẫu được sử dụng trong khung Bayesian, khiến cho các tóm tắt kết quả rất giống nhau hoặc thậm chí bằng với những gì thu được với bối cảnh Bayesian. Điểm khác biệt chính giữa cách tiếp cận mô hình phân cấp của Bayesian và Người theo chủ nghĩa thường xuyên là ở chỗ sau này, chúng tôi sử dụng dữ liệu để xây dựng các kiến ​​thức tiên nghiệm thay vì coi các kiến ​​thức tiên nghiệm như một phép định lượng kiến ​​thức chuyên môn trước đó. Dưới đây minh họa việc sử dụng mô hình phân cấp bằng một ví dụ từ thể thao, trong đó những người hâm mộ tận tâm áp dụng một cách trực quan các ý tưởng của mô hình phân cấp để quản lý kỳ vọng khi một cầu thủ mới có khởi đầu đặc biệt tốt.
+
+12.1 Nghiên cứu trường hợp: dự báo bầu cử
+Kể từ cuộc bầu cử năm 2008, các tổ chức không phải FiveThirtyEight đã thành lập các nhóm dự báo bầu cử của riêng họ. Nhóm này cũng tổng hợp dữ liệu thăm dò ý kiến ​​và sử dụng các mô hình thống kê để đưa ra dự đoán. Tuy nhiên, năm 2016, các nhà dự báo đã đánh giá thấp rất nhiều cơ hội chiến thắng của Trump. Một ngày trước cuộc bầu cử, tờ New York Times đưa tin1 những khả năng sau đây để Hillary Clinton đắc cử tổng thống:
+
+NYT 538 HuffPost PW PEC DK Cook Roth
+Giành chiến thắng 85% 71% 98% 89% >99% 92% Lean Dem Lean Dem
+Ví dụ, Hiệp hội bầu cử Princeton (PEC) cho Trump ít hơn 1% cơ hội chiến thắng, trong khi Huffington Post cho ông cơ hội 2%. Ngược lại, FiveThirtyEight có xác suất chiến thắng của Trump là 29%, cao hơn đáng kể so với những người khác. Trên thực tế, bốn ngày trước cuộc bầu cử, FiveThirtyEight đã xuất bản một bài báo có tiêu đề Trump chỉ là một lỗi thăm dò bình thường đằng sau Clinton2.
+
+Vậy tại sao mô hình của FiveThirtyEight lại tốt hơn nhiều so với những mô hình khác? Làm sao PEC và Huffington Post lại có thể mắc sai lầm như vậy nếu họ sử dụng cùng một dữ liệu? Trong chương này, chúng tôi mô tả cách FiveThirtyEight sử dụng mô hình phân cấp để giải thích chính xác các nguồn biến động chính và hoạt động tốt hơn tất cả các công cụ dự báo khác. Với mục đích minh họa, chúng tôi sẽ tiếp tục xem xét ví dụ về phiếu bầu phổ thông của chúng tôi. Trong phần cuối cùng, chúng tôi sẽ mô tả cách tiếp cận phức tạp hơn được sử dụng để dự báo kết quả cử tri đoàn.
+12.2 Độ lệch chung
+Trong chương trước, chúng tôi đã tính toán xác suất hậu nghiệm để Hillary Clinton giành được số phiếu phổ thông bằng phân tích Bayesian tiêu chuẩn và nhận thấy nó rất gần 100%. Tuy nhiên, FiveThirtyEight cho cô ấy 81,4% cơ hội3. Điều gì giải thích sự khác biệt này? Dưới đây chúng tôi mô tả xu hướng chung, một nguồn biến động khác, có trong mô hình FiveThirtyEight, giải thích cho sự khác biệt.
+
+Sau khi cuộc bầu cử kết thúc, người ta có thể xem xét sự khác biệt giữa dự đoán của người thăm dò ý kiến ​​và kết quả thực tế. Một quan sát quan trọng mà các mô hình ban đầu của chúng tôi đã không tính đến là người ta thường thấy xu hướng chung ảnh hưởng đến hầu hết những người thăm dò ý kiến ​​giống như cách làm cho dữ liệu được quan sát có mối tương quan với nhau. Không có lời giải thích nào được thống nhất cho điều này, nhưng chúng tôi quan sát thấy nó trong dữ liệu lịch sử: trong một cuộc bầu cử, trung bình các cuộc thăm dò ủng hộ đảng Dân chủ 2%, sau đó trong cuộc bầu cử tiếp theo họ ủng hộ đảng Cộng hòa 1%, rồi trong cuộc bầu cử tiếp theo ở đó không có thành kiến, thì ở lần tiếp theo, Đảng Cộng hòa được 3% ủng hộ, v.v. Năm 2016, các cuộc thăm dò có tỷ lệ nghiêng về Đảng Dân chủ từ 1-2%.
+
+Tuy nhiên, mặc dù chúng tôi biết thuật ngữ thiên vị này ảnh hưởng đến các cuộc thăm dò của chúng tôi, nhưng chúng tôi không có cách nào biết được thành kiến ​​này là gì cho đến đêm bầu cử. Vì vậy, chúng tôi không thể sửa các cuộc thăm dò của mình cho phù hợp. Những gì chúng tôi có thể làm là đưa một thuật ngữ vào mô hình của mình để giải thích cho sự biến thiên.
+
+12.3 Mathematical representations of the hierarchical model
+Suppose we are collecting data from one pollster and we assume there is no general bias. The pollster collects several polls with a sample size of 
+, so we observe several measurements of the spread . Suppose the real proportion for Hillary is and the difference is . The urn model theory tells us that these random variables are normally distributed with expected value and standard error :
+
+We use the index to represent the different polls conducted by this pollster. Here is a simulation for six polls assuming the spread is 2.1 and is 2,000:
+```{r}
+set.seed(3)
+J <- 6
+N <- 2000
+mu <- .021
+p <- (mu + 1)/2
+X <- rnorm(J, mu, 2 * sqrt(p * (1 - p) / N))
+```
+Bây giờ giả sử chúng ta có
+ cuộc thăm dò từ mỗi
+ những người thăm dò khác nhau. Để đơn giản, giả sử tất cả các cuộc thăm dò đều có cùng cỡ mẫu
+. Mô hình bình đựng tro cho chúng ta biết mức phân bổ giống nhau đối với tất cả người thăm dò ý kiến, vì vậy để mô phỏng dữ liệu, chúng tôi sử dụng cùng một mô hình cho mỗi người:
+
+```{r}
+I <- 5
+J <- 6
+N <- 2000
+X <- sapply(1:I, function(i){
+  rnorm(J, mu, 2 * sqrt(p * (1 - p) / N))
+})
+```
+
+Đúng như mong đợi, dữ liệu mô phỏng dường như không thực sự nắm bắt được các đặc điểm của dữ liệu thực tế vì nó không tính đến sự biến đổi giữa người thăm dò ý kiến:
+
+Để khắc phục điều này, chúng tôi cần biểu thị hai mức độ biến thiên và chúng tôi cần hai chỉ mục, một cho người thăm dò ý kiến ​​và một cho các cuộc thăm dò mà mỗi người thăm dò ý kiến ​​thực hiện. Chúng tôi sử dụng với đại diện cho người thăm dò ý kiến ​​và
+ đại diện cho - cuộc thăm dò thứ từ người thăm dò ý kiến ​​đó. Mô hình hiện đã được tăng cường để bao gồm các hiệu ứng thăm dò ý kiến
+, được FiveThirtyEight gọi là hiệu ứng nhà ở, với độ lệch chuẩn:
+
+Để mô phỏng dữ liệu từ một người thăm dò cụ thể, trước tiên chúng ta cần vẽ một và tạo dữ liệu thăm dò riêng lẻ sau khi thêm hiệu ứng này. Đây là cách chúng tôi sẽ làm điều đó cho một người thăm dò ý kiến ​​cụ thể. Chúng tôi giả sử là 0,025:
+```{r}
+I <- 5
+J <- 6
+N <- 2000
+mu <- .021
+p <- (mu + 1) / 2
+h <- rnorm(I, 0, 0.025)
+X <- sapply(1:I, function(i){
+  mu + h[i] + rnorm(J, 0, 2 * sqrt(p * (1 - p) / N))
+})
+```
+Dữ liệu mô phỏng bây giờ trông giống dữ liệu thực tế hơn:
+
+Lưu ý rằng
+ là phổ biến đối với tất cả các mức chênh lệch được quan sát từ một người thăm dò cụ thể. Những người thăm dò ý kiến ​​khác nhau có cách làm khác nhau
+, điều này giải thích tại sao chúng ta có thể thấy các nhóm điểm thay đổi lên xuống từ người thăm dò ý kiến ​​này sang người thăm dò ý kiến ​​khác.
+
+Bây giờ, trong mô hình trên, chúng tôi giả định hiệu ứng nhà trung bình là 0. Chúng tôi nghĩ rằng với mỗi người thăm dò ý kiến ​​thiên về đảng của chúng tôi thì sẽ có một người khác ủng hộ đảng kia và giả sử độ lệch chuẩn là. Nhưng về mặt lịch sử, chúng ta thấy rằng mọi cuộc bầu cử đều có một thành kiến ​​chung ảnh hưởng đến tất cả các cuộc thăm dò. Chúng tôi có thể quan sát điều này với dữ liệu năm 2016, nhưng nếu thu thập dữ liệu lịch sử, chúng tôi thấy rằng tỷ lệ trung bình của các cuộc thăm dò bị trượt nhiều hơn các mô hình như dự đoán ở trên. Để thấy điều này, chúng tôi sẽ lấy mức trung bình của các cuộc thăm dò trong mỗi năm bầu cử và so sánh nó với giá trị thực tế. Nếu làm như vậy, chúng ta sẽ thấy sự khác biệt với độ lệch chuẩn trong khoảng 2-3%. Để kết hợp điều này vào mô hình, chúng ta có thể thêm một tài khoản cấp độ khác cho sự thay đổi này:
+
+Mô hình này giải thích ba mức độ biến thiên: 1) sự biến thiên trong thành kiến ​​được quan sát từ cuộc bầu cử này sang cuộc bầu cử khác, được định lượng bằng
+, 2) sự thay đổi giữa người thăm dò ý kiến ​​hoặc hiệu ứng nhà, được định lượng bằng
+và 3) độ biến thiên của việc lấy mẫu thăm dò ý kiến, mà chúng ta có thể suy ra là
+.
+
+Lưu ý rằng không bao gồm một thuật ngữ như
+ trong các mô hình, chính là nguyên nhân khiến nhiều nhà dự báo trở nên quá tự tin. Biến ngẫu nhiên này thay đổi từ cuộc bầu cử này sang cuộc bầu cử khác, nhưng đối với bất kỳ cuộc bầu cử cụ thể nào, nó giống nhau đối với tất cả những người thăm dò ý kiến ​​và các cuộc thăm dò trong cuộc bầu cử (lưu ý rằng nó không có chỉ mục). Điều này ngụ ý rằng chúng ta không thể ước tính
+ với dữ liệu chỉ từ một cuộc bầu cử. Nó cũng ngụ ý rằng các biến ngẫu nhiên
+ cho một năm bầu cử cố định chia sẻ như nhau
+ và do đó có mối tương quan.
+
+Một cách giải thích
+ là sự khác biệt giữa mức trung bình của tất cả các cuộc thăm dò từ tất cả những người thăm dò ý kiến ​​và kết quả thực tế của cuộc bầu cử. Bởi vì chúng tôi không biết kết quả thực tế cho đến sau cuộc bầu cử nên chúng tôi không thể ước tính
+ cho đến sau cuộc bầu cử.
+ 
+ 12.4 Tính xác suất hậu nghiệm
+Một số kết quả được trình bày trong phần này dựa trên việc tính toán các đặc tính thống kê của các tóm tắt dựa trên các biến ngẫu nhiên tương quan. Để tìm hiểu về các chi tiết toán học liên quan mà chúng tôi bỏ qua trong cuốn sách này, vui lòng tham khảo sách giáo khoa về các mô hình phân cấp.
+
+Bây giờ hãy điều chỉnh mô hình trên phù hợp với dữ liệu. Chúng tôi sẽ sử dụng cùng một dữ liệu được sử dụng trong các chương trước và được lưu trong one_poll_per_pollster.
+
+```{r}
+polls <- polls_us_election_2016 |> 
+  filter(state == "U.S." & enddate >= "2016-10-31" &
+           (grade %in% c("A+","A","A-","B+") | is.na(grade))) |> 
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+
+one_poll_per_pollster <- polls |> group_by(pollster) |> 
+  filter(enddate == max(enddate)) |>
+  ungroup()
+```
+
+Ở đây chúng tôi chỉ có một cuộc thăm dò cho mỗi người thăm dò ý kiến ​​nên chúng tôi sẽ bỏ cuộc thăm dò ý kiến lập chỉ mục và biểu diễn dữ liệu như trước với
+. Xin nhắc lại, chúng tôi có dữ liệu từ người thăm dò ý kiến. Dựa trên các giả định mô hình được mô tả ở trên, chúng ta có thể chỉ ra một cách toán học rằng giá trị trung bình
+
+```{r}
+x_bar <- mean(one_poll_per_pollster$spread)
+```
+có giá trị kỳ vọng, do đó nó cung cấp một ước tính không thiên vị về kết quả quan tâm. Tuy nhiên, ước tính này chính xác đến mức nào? Liệu chúng ta có thể sử dụng độ lệch chuẩn Stample quan sát được để ước lượng sai số chuẩn của
+?
+Hoá ra là vì có mối tương quan với nhau, việc ước tính sai số chuẩn phức tạp hơn những gì chúng tôi đã mô tả cho đến nay. Cụ thể, bằng cách sử dụng các phép tính thống kê nâng cao không được hiển thị ở đây, chúng tôi có thể chỉ ra rằng ước tính phương sai điển hình (bình phương sai số chuẩn)
+
+```{r}
+s2 <- with(one_poll_per_pollster, sd(spread)^2 / length(spread))
+```
+sẽ luôn đánh giá thấp sai số chuẩn thực sự khoảng
+. Và, như đã đề cập trước đó, để ước tính
+, chúng tôi cần dữ liệu từ một số cuộc bầu cử. Bằng cách thu thập và phân tích dữ liệu thăm dò ý kiến ​​từ một số cuộc bầu cử, FiveThirtyEight ước tính mức độ biến động này và nhận thấy rằng
+. Do đó, chúng tôi có thể cải thiện đáng kể ước tính sai số chuẩn của mình bằng cách thêm đại lượng này:
+
+```{r}
+sigma_b <- 0.025
+se <- sqrt(s2 + sigma_b^2)
+```
+
+Nếu chúng tôi thực hiện lại phép tính Bayes có tính đến sự thay đổi này, chúng tôi sẽ nhận được kết quả gần hơn với kết quả của FiveThirtyEight:
+
+```{r}
+mu <- 0
+tau <- 0.035
+B <- se^2 / (se^2 + tau^2)
+posterior_mean <- B*mu + (1-B)*x_bar
+posterior_se <- sqrt( 1/ (1/se^2 + 1/tau^2))
+
+1 - pnorm(0, posterior_mean, posterior_se)
+#> [1] 0.817
+```
+Lưu ý rằng bằng cách tính đến số hạng sai lệch chung, phân tích Bayesian của chúng tôi hiện tạo ra xác suất hậu nghiệm tương tự như xác suất được báo cáo bởi FiveThirtyEight.
+
+12.5 Dự đoán cử tri đoàn
+Cho đến nay chúng tôi đã tập trung vào việc bình chọn phổ biến. Nhưng ở Hoa Kỳ, các cuộc bầu cử không được quyết định bởi số phiếu phổ thông mà bởi cái được gọi là cử tri đoàn. Mỗi bang nhận được một số phiếu đại cử tri phụ thuộc, theo một cách hơi phức tạp, vào quy mô dân số của bang. Dưới đây là 5 bang dẫn đầu được xếp hạng theo số phiếu đại cử tri năm 2016.
+```{r}
+results_us_election_2016 |> top_n(5, electoral_votes)
+#>          state electoral_votes clinton trump others
+#> 1   California              55    61.7  31.6    6.7
+#> 2        Texas              38    43.2  52.2    4.5
+#> 3      Florida              29    47.8  49.0    3.2
+#> 4     New York              29    59.0  36.5    4.5
+#> 5     Illinois              20    55.8  38.8    5.4
+#> 6 Pennsylvania              20    47.9  48.6    3.6
+```
+Với một số ngoại lệ nhỏ mà chúng tôi không thảo luận, phiếu đại cử tri sẽ giành được tất cả hoặc không có gì. Ví dụ: nếu bạn thắng California vào năm 2016 chỉ bằng 1 phiếu bầu, bạn vẫn nhận được tất cả 55 phiếu đại cử tri của bang này. Điều này có nghĩa là bằng cách giành chiến thắng ở một số bang lớn với tỷ số chênh lệch lớn, nhưng lại để thua nhiều bang nhỏ với tỷ số chênh lệch nhỏ, bạn có thể giành được số phiếu phổ thông nhưng vẫn thua cử tri đoàn. Điều này đã xảy ra vào các năm 1876, 1888, 2000 và 2016. Ý tưởng đằng sau việc này là nhằm tránh việc một số bang lớn có quyền thống trị cuộc bầu cử tổng thống.
+
+Nhiều người ở Mỹ coi cử tri đoàn là không công bằng và muốn thấy nó bị bãi bỏ để ủng hộ hình thức bỏ phiếu phổ thông.
+
+Hiện tại, chúng tôi đã sẵn sàng dự đoán kết quả cử tri đoàn cho năm 2016. Chúng tôi bắt đầu bằng cách tổng hợp kết quả từ một cuộc thăm dò được thực hiện trong tuần cuối cùng trước cuộc bầu cử. Chúng tôi sử dụng grepl, tìm các chuỗi trong vectơ ký tự, để loại bỏ các cuộc thăm dò không dành cho toàn bộ trạng thái.
+
+```{r}
+results <- polls_us_election_2016 |>
+  filter(state!="U.S." & 
+           !grepl("CD", state) & 
+           enddate >="2016-10-31" & 
+           (grade %in% c("A+","A","A-","B+") | is.na(grade))) |>
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) |>
+  group_by(state) |>
+  summarize(avg = mean(spread), sd = sd(spread), n = n()) |>
+  mutate(state = as.character(state))
+```
+Dưới đây là năm cuộc đua gần nhất theo các cuộc thăm dò:
+
+```{r}
+results |> arrange(abs(avg))
+#> # A tibble: 47 × 4
+#>   state               avg     sd     n
+#>   <chr>             <dbl>  <dbl> <int>
+#> 1 Florida         0.00356 0.0163     7
+#> 2 North Carolina -0.0073  0.0306     9
+#> 3 Ohio           -0.0104  0.0252     6
+#> 4 Nevada          0.0169  0.0441     7
+#> 5 Iowa           -0.0197  0.0437     3
+#> # ℹ 42 more rows
+```
+
+Bây giờ chúng tôi giới thiệu lệnh left_join cho phép chúng tôi dễ dàng thêm số phiếu đại cử tri cho mỗi tiểu bang từ tập dữ liệu us_electoral_votes_2016. Ở đây, chúng ta chỉ đơn giản nói rằng hàm kết hợp hai tập dữ liệu để thông tin từ đối số thứ hai được thêm vào thông tin trong đối số thứ nhất:
+
+```{r}
+results <- left_join(results, results_us_election_2016, by = "state")
+```
+Lưu ý rằng một số bang không có cuộc thăm dò ý kiến ​​vì người chiến thắng được biết đến khá nhiều:
+
+```{r}
+results_us_election_2016 |> filter(!state %in% results$state) |> 
+  pull(state)
+#> [1] "Rhode Island"         "Alaska"               "Wyoming"             
+#> [4] "District of Columbia"
+```
+Không có cuộc thăm dò nào được tiến hành ở DC, Rhode Island, Alaska và Wyoming vì đảng Dân chủ chắc chắn giành chiến thắng trong hai cuộc thăm dò đầu tiên và đảng Cộng hòa ở hai cuộc thăm dò cuối cùng.
+
+Vì chúng tôi không thể ước tính độ lệch chuẩn cho các tiểu bang chỉ có một cuộc thăm dò nên chúng tôi sẽ ước tính nó là giá trị trung bình của độ lệch chuẩn được ước tính cho các tiểu bang có nhiều hơn một cuộc thăm dò:
+
+```{r}
+results <- results |>
+  mutate(sd = ifelse(is.na(sd), median(results$sd, na.rm = TRUE), sd))
+```
+Để đưa ra các lập luận xác suất, chúng ta sẽ sử dụng mô phỏng Monte Carlo. Đối với mỗi tiểu bang, chúng tôi áp dụng phương pháp Bayesian để tạo ra ngày bầu cử
+. Chúng tôi có thể xây dựng các linh mục cho từng tiểu bang dựa trên lịch sử gần đây. Tuy nhiên, để đơn giản, chúng tôi chỉ định giá trị trước cho mỗi trạng thái giả định rằng chúng tôi không biết gì về điều gì sẽ xảy ra. Vì từ năm bầu cử này sang năm bầu cử khác, kết quả từ một tiểu bang cụ thể không thay đổi nhiều nên chúng tôi sẽ ấn định độ lệch chuẩn là 2% hoặc
+. Hiện tại, chúng tôi sẽ giả định một cách không chính xác rằng kết quả thăm dò ý kiến ​​​​từ mỗi tiểu bang là độc lập. Mã cho phép tính Bayes theo các giả định này trông như thế này:
+
+```{r}
+mu <- 0
+tau <- 0.02
+results |> mutate(sigma = sd/sqrt(n), 
+                   B = sigma^2 / (sigma^2 + tau^2),
+                   posterior_mean = B * mu + (1 - B) * avg,
+                   posterior_se = sqrt(1/ (1/sigma^2 + 1/tau^2)))
+#> # A tibble: 47 × 12
+#>   state          avg       sd     n electoral_votes clinton trump others
+#>   <chr>        <dbl>    <dbl> <int>           <int>   <dbl> <dbl>  <dbl>
+#> 1 Alabama    -0.149  0.0253       3               9    34.4  62.1    3.6
+#> 2 Arizona    -0.0326 0.0270       9              11    45.1  48.7    6.2
+#> 3 Arkansas   -0.151  0.000990     2               6    33.7  60.6    5.8
+#> 4 California  0.260  0.0387       5              55    61.7  31.6    6.7
+#> 5 Colorado    0.0452 0.0295       7               9    48.2  43.3    8.6
+#> # ℹ 42 more rows
+#> # ℹ 4 more variables: sigma <dbl>, B <dbl>, posterior_mean <dbl>,
+#> #   posterior_se <dbl>
+```
+
+Các ước tính dựa trên hậu nghiệm sẽ đưa các ước tính về 0, mặc dù các bang có nhiều cuộc thăm dò sẽ bị ảnh hưởng ít hơn. Điều này được mong đợi vì chúng tôi càng thu thập nhiều dữ liệu thăm dò ý kiến ​​thì chúng tôi càng tin tưởng vào những kết quả đó:
+Bây giờ chúng tôi lặp lại điều này 10.000 lần và tạo ra kết quả từ phần sau. Trong mỗi lần lặp lại, chúng tôi theo dõi tổng số phiếu đại cử tri cho Clinton. Hãy nhớ rằng Trump nhận được 270 phiếu trừ cho Clinton. Cũng lưu ý rằng lý do chúng tôi thêm 7 vào mã là để tính đến Rhode Island và D.C.:
+
+```{r}
+B <- 10000
+mu <- 0
+tau <- 0.02
+clinton_EV <- replicate(B, {
+  results |> mutate(sigma = sd/sqrt(n), 
+                   B = sigma^2 / (sigma^2 + tau^2),
+                   posterior_mean = B * mu + (1 - B) * avg,
+                   posterior_se = sqrt(1 / (1/sigma^2 + 1/tau^2)),
+                   result = rnorm(length(posterior_mean), 
+                                  posterior_mean, posterior_se),
+                   clinton = ifelse(result > 0, electoral_votes, 0)) |> 
+    summarize(clinton = sum(clinton)) |> 
+    pull(clinton) + 7
+})
+
+mean(clinton_EV > 269)
+#> [1] 0.998
+```
+Mô hình này mang lại cho Clinton cơ hội chiến thắng trên 99%. Một dự đoán tương tự cũng được Hiệp hội bầu cử Princeton đưa ra. Bây giờ chúng tôi biết nó đã khá tắt. Chuyện gì đã xảy ra thế?
+
+Mô hình trên bỏ qua sai lệch chung và giả định kết quả từ các trạng thái khác nhau là độc lập. Sau cuộc bầu cử, chúng tôi nhận ra rằng xu hướng chung năm 2016 không lớn đến thế: nằm trong khoảng từ 1 đến 2%. Nhưng vì cuộc bầu cử đã đến gần ở một số bang lớn và những bang này có số lượng phiếu bầu lớn nên những người thăm dò ý kiến ​​đã bỏ qua thành kiến ​​chung đã đánh giá rất thấp sai số chuẩn. Sử dụng ký hiệu mà chúng tôi giới thiệu, họ cho rằng sai số chuẩn là
+ mà với N lớn thì khá nhỏ hơn so với ước tính chính xác hơn
+. FiveThirtyEight, mô hình hóa xu hướng chung theo một cách khá phức tạp, đã báo cáo kết quả gần hơn. Bây giờ chúng ta có thể mô phỏng các kết quả bằng một số hạng sai lệch. Đối với cấp tiểu bang, độ lệch chung có thể lớn hơn nên chúng tôi đặt nó ở mức:
+```{r}
+tau <- 0.02
+bias_sd <- 0.03
+clinton_EV_2 <- replicate(1000, {
+  results |> mutate(sigma = sqrt(sd^2/n  + bias_sd^2),  
+                   B = sigma^2 / (sigma^2 + tau^2),
+                   posterior_mean = B*mu + (1-B)*avg,
+                   posterior_se = sqrt( 1/ (1/sigma^2 + 1/tau^2)),
+                   result = rnorm(length(posterior_mean), 
+                                  posterior_mean, posterior_se),
+                   clinton = ifelse(result>0, electoral_votes, 0)) |> 
+    summarize(clinton = sum(clinton) + 7) |> 
+    pull(clinton)
+})
+mean(clinton_EV_2 > 269)
+#> [1] 0.848
+```
+Điều này cho chúng ta một ước tính hợp lý hơn nhiều. Nhìn vào kết quả của mô phỏng, chúng ta thấy thuật ngữ sai lệch làm tăng thêm tính biến thiên cho kết quả cuối cùng như thế nào.
+FiveThirtyEight bao gồm nhiều tính năng khác mà chúng tôi không đưa vào đây. Một là họ lập mô hình tính biến thiên với các phân bố có xác suất cao xảy ra các sự kiện cực đoan so với mức bình thường. Một cách chúng ta có thể làm điều này là thay đổi phân bố được sử dụng trong mô phỏng từ phân bố chuẩn sang phân bố t. FiveThirtyEight dự đoán xác suất là 71%.
+
+12.6 Dự báo
+Các nhà dự báo thích đưa ra những dự đoán thật kỹ trước cuộc bầu cử. Các dự đoán được điều chỉnh khi các cuộc thăm dò mới được đưa ra. Tuy nhiên, một câu hỏi quan trọng mà các nhà dự báo phải đặt ra là: các cuộc thăm dò được thực hiện vài tuần trước cuộc bầu cử có nhiều thông tin như thế nào về cuộc bầu cử thực tế? Ở đây chúng tôi nghiên cứu sự thay đổi của kết quả thăm dò theo thời gian.
+
+Để đảm bảo sự thay đổi mà chúng tôi quan sát được không phải do hiệu ứng của người thăm dò ý kiến, hãy nghiên cứu dữ liệu từ một người thăm dò ý kiến:
+
+```{r}
+one_pollster <- polls_us_election_2016 |> 
+  filter(pollster == "Ipsos" & state == "U.S.") |> 
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+```
+
+Vì không có hiệu ứng thăm dò ý kiến ​​nên có lẽ sai số chuẩn lý thuyết khớp với độ lệch chuẩn thu được từ dữ liệu. Chúng tôi tính toán cả hai ở đây:
+```{r}
+se <- one_pollster |> 
+  summarize(empirical = sd(spread), 
+            theoretical = 2 * sqrt(mean(spread) * (1 - mean(spread)) /
+                                     min(samplesize)))
+se
+#>   empirical theoretical
+#> 1    0.0403      0.0326
+```
+Nhưng độ lệch chuẩn thực nghiệm cao hơn ước tính lý thuyết cao nhất có thể có. Hơn nữa, dữ liệu chênh lệch trông không bình thường như lý thuyết dự đoán:
+
+The models we have described include pollster-to-pollster variability and sampling error. But this plot is for one pollster and the variability we see is certainly not explained by sampling error. Where is the extra variability coming from? The following plots make a strong case that it comes from time fluctuations not accounted for by the theory that assumes 
+ is fixed:
+
+#> `geom_smooth()` using formula = 'y ~ x'
+Some of the peaks and valleys we see coincide with events such as the party conventions, which tend to give the candidate a boost. We can see the peaks and valleys are consistent across several pollsters:
+
+#> `geom_smooth()` using formula = 'y ~ x'
+Điều này ngụ ý rằng, nếu chúng ta dự báo, mô hình của chúng ta phải bao gồm một thuật ngữ để giải thích hiệu ứng thời gian. Chúng ta cần viết một mô hình bao gồm một số hạng thiên vị cho thời gian, biểu thị nó
+. Độ lệch chuẩn của
+ sẽ phụ thuộc vào
+ vì chúng ta càng đến gần ngày bầu cử thì số hạng sai lệch này càng gần về 0.
+
+Những người thăm dò ý kiến ​​cũng cố gắng ước tính xu hướng từ những dữ liệu này và kết hợp chúng vào dự đoán của họ. Chúng ta có thể mô hình hóa xu hướng thời gian
+ với chức năng mượt mà. Chúng ta thường thấy ước tính xu hướng không phải về sự khác biệt mà về tỷ lệ phần trăm thực tế cho mỗi ứng cử viên như thế này:
+ 
+ Khi một mô hình như mô hình trên được chọn, chúng ta có thể sử dụng dữ liệu lịch sử và hiện tại để ước tính tất cả các tham số cần thiết nhằm đưa ra dự đoán. Có nhiều phương pháp khác nhau để ước tính xu hướng mà chúng tôi sẽ thảo luận trong phần Học máy.
+ 
+ 
