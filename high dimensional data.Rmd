@@ -1,0 +1,1211 @@
+
+Dữ liệu chiều cao
+Có nhiều kỹ thuật tính toán và khái niệm thống kê hữu ích cho việc phân tích các tập dữ liệu mà mỗi quan sát được liên kết với một số lượng lớn các biến số. Trong chương này, chúng tôi cung cấp phần giới thiệu cơ bản về các kỹ thuật và khái niệm này bằng cách mô tả các phép toán ma trận trong R, giảm kích thước, chính quy hóa và phân tích ma trận. Dữ liệu chữ số viết tay và hệ thống đề xuất phim đóng vai trò là ví dụ thúc đẩy.
+
+Nhiệm vụ được coi là động lực cho phần này của cuốn sách là định lượng sự giống nhau giữa hai quan sát bất kỳ. Ví dụ: chúng ta có thể muốn biết hai chữ số viết tay trông giống nhau đến mức nào. Tuy nhiên, lưu ý rằng mỗi quan sát được liên kết với
+ pixel nên chúng ta không thể đơn giản sử dụng phép trừ như chúng ta vẫn làm nếu dữ liệu của chúng ta là một chiều. Thay vào đó, chúng ta sẽ định nghĩa các quan sát là các điểm trong không gian nhiều chiều và xác định khoảng cách về mặt toán học. Nhiều kỹ thuật học máy được thảo luận trong phần tiếp theo của cuốn sách yêu cầu tính toán này.
+
+Ngoài ra, phần này của cuốn sách thảo luận về việc giảm kích thước. Ở đây, chúng tôi tìm kiếm các bản tóm tắt dữ liệu dẫn đến các phiên bản dữ liệu có kích thước thấp hơn dễ quản lý hơn nhưng vẫn giữ được hầu hết hoặc tất cả thông tin chúng tôi cần. Ở đây, chúng ta cũng có thể sử dụng khoảng cách giữa các quan sát như một thách thức cụ thể: chúng ta sẽ giảm các kích thước tóm tắt dữ liệu thành các kích thước thấp hơn, nhưng theo cách duy trì khoảng cách giữa hai quan sát bất kỳ. Chúng tôi sử dụng đại số tuyến tính làm nền tảng toán học cho tất cả các kỹ thuật được trình bày ở đây.
+
+19 ma trận trong R
+Khi số lượng biến liên quan đến mỗi quan sát lớn và tất cả chúng có thể được biểu diễn dưới dạng số, việc lưu trữ chúng trong ma trận và thực hiện phân tích bằng các phép toán đại số tuyến tính thường thuận tiện hơn là lưu trữ trong khung dữ liệu và thực hiện phân tích với các hàm gọn gàng hoặc data.table. Với ma trận, các biến cho mỗi quan sát được lưu thành một hàng, dẫn đến một ma trận có nhiều cột bằng số biến. Trong thống kê, chúng tôi gọi các giá trị được biểu thị trong các hàng của ma trận là hiệp phương sai hoặc biến số và trong học máy, chúng tôi gọi chúng là các đặc điểm.
+
+Trong đại số tuyến tính, chúng ta có ba loại đối tượng: vô hướng, vectơ và ma trận. Chúng ta đã học về vectơ trong R và mặc dù không có kiểu dữ liệu cho đại số vô hướng, chúng ta có thể biểu diễn chúng dưới dạng vectơ có độ dài 1. Trong chương này, chúng ta học cách làm việc với ma trận trong R và liên hệ chúng với ký hiệu đại số tuyến tính và các khái niệm.
+
+19.1 Nghiên cứu trường hợp: MNIST
+Một ví dụ đến từ các chữ số viết tay. Bước đầu tiên trong việc xử lý thư nhận được ở bưu điện là phân loại thư theo mã zip:
+
+Trong phần Học máy của cuốn sách này, chúng tôi sẽ mô tả cách chúng tôi có thể xây dựng các thuật toán máy tính để đọc các chữ số viết tay, sau đó robot sẽ sử dụng thuật toán này để sắp xếp các chữ cái. Để xây dựng các thuật toán này, trước tiên chúng ta cần thu thập dữ liệu, trong trường hợp này là tập dữ liệu nhiều chiều.
+
+Bộ dữ liệu MNIST được tạo bằng cách số hóa hàng nghìn chữ số viết tay, đã được con người đọc và chú thích1. Dưới đây là ba hình ảnh của chữ số viết.
+
+Các hình ảnh được chuyển đổi thành 28 X 28 = 784 pixels và đối với mỗi pixel , chúng tôi thu được cường độ thang màu xám trong khoảng từ 0 (trắng) đến 255 (đen). Sơ đồ sau đây hiển thị các đặc điểm riêng cho từng hình ảnh:
+ 
+Đối với mỗi hình ảnh số hóa, được lập chỉ mục bởii, chúng ta được cung cấp 784 biến và một kết quả phân loại, hoặc nhãn, biểu thị chữ số nào trong số 0,1,2,3,4,5,6,7,8,9
+ Và hình ảnh đang đại diện. Hãy tải dữ liệu bằng gói dslabs:
+```{r}
+library(tidyverse)
+library(dslabs)
+mnist <- read_mnist()
+```
+ 
+ Trong những trường hợp này, cường độ điểm ảnh được lưu trong ma trận:
+```{r}
+class(mnist$train$images)
+#> [1] "matrix" "array"
+```
+ 
+ Các nhãn liên quan đến mỗi hình ảnh được bao gồm trong một vectơ:
+```{r}
+table(mnist$train$labels)
+#> 
+#>    0    1    2    3    4    5    6    7    8    9 
+#> 5923 6742 5958 6131 5842 5421 5918 6265 5851 5949
+```
+ 
+ 
+ 19.1.1 Nhiệm vụ tạo động lực
+Để thúc đẩy việc sử dụng ma trận trong R, chúng tôi sẽ đặt ra sáu nhiệm vụ liên quan đến dữ liệu chữ số viết tay và sau đó hiển thị mã nhanh chóng và đơn giản để giải chúng.
+
+1. Trực quan hóa hình ảnh gốc. Cường độ pixel được cung cấp dưới dạng hàng trong ma trận. Chúng tôi sẽ chỉ ra cách chuyển đổi chúng thành ma trận mà chúng tôi có thể hình dung được.
+
+2. Có phải một số chữ số cần nhiều mực để viết hơn những chữ số khác không? Chúng ta sẽ nghiên cứu sự phân bổ tổng độ tối của pixel và nó thay đổi như thế nào theo các chữ số.
+
+3. Có phải một số pixel không mang lại nhiều thông tin? Chúng tôi sẽ nghiên cứu sự biến đổi của từng pixel trên các chữ số và loại bỏ các yếu tố dự đoán (cột) liên quan đến các pixel không thay đổi nhiều và do đó không thể cung cấp nhiều thông tin để phân loại.
+
+4. Chúng ta có thể loại bỏ vết ố không? Trước tiên, chúng ta sẽ xem xét sự phân bổ của tất cả các giá trị pixel. Sau đó, chúng ta sẽ sử dụng điều này để chọn một điểm cắt nhằm xác định khoảng trống không được viết. Sau đó, đặt mọi thứ dưới mức cắt đó thành 0.
+
+5. Nhị phân dữ liệu. Đầu tiên, chúng ta sẽ xem xét sự phân bố của tất cả các giá trị pixel. Sau đó, chúng tôi sẽ sử dụng điều này để chọn điểm giới hạn nhằm phân biệt giữa viết và không viết. Sau đó, chúng tôi sẽ chuyển đổi tất cả các mục thành 1 hoặc 0.
+
+6. Chuẩn hóa các chữ số. Chúng tôi sẽ chia tỷ lệ từng yếu tố dự đoán trong mỗi mục để có cùng độ lệch trung bình và độ lệch chuẩn.
+
+Để hoàn thành những điều này, chúng ta sẽ phải thực hiện các phép toán liên quan đến một số biến. tidyverse hoặc data.table không được phát triển để thực hiện các loại phép toán này. Đối với nhiệm vụ này, thật thuận tiện khi sử dụng ma trận.
+
+Để đơn giản hóa mã bên dưới, chúng tôi sẽ đổi tên x và y lần lượt:
+```{r}
+x <- mnist$train$images
+y <- mnist$train$labels
+```
+
+19.2 Kích thước của ma trận
+Chiều của ma trận là một đặc tính quan trọng cần thiết để đảm bảo rằng một số phép toán đại số tuyến tính có thể được thực hiện. Kích thước được mô tả gồm hai số được xác định là số hàng X số lượng cột.
+
+Hàm nrow cho chúng ta biết ma trận tha có bao nhiêu hàng:
+```{r}
+nrow(x)
+#> [1] 60000
+```
+và ncol cho chúng ta biết có bao nhiêu cột:
+```{r}
+ncol(x)
+#> [1] 784
+```
+Chúng tôi biết rằng tập dữ liệu của chúng tôi chứa 60.000 quan sát (hình ảnh) và 784 điểm đặc trưng  (pixel).
+
+Hàm dim trả về các hàng và cột:
+```{r}
+dim(x)
+#> [1] 60000   784
+```
+
+19.3 Tạo ma trận
+Trong R chúng ta có thể tạo ma trận bằng hàm ma trận. Đối số đầu tiên là một vectơ chứa các phần tử sẽ lấp đầy ma trận. Đối số thứ hai và thứ ba xác định số hàng và số cột tương ứng. Vì vậy, cách điển hình để tạo ma trận là trước tiên lấy một vectơ số chứa các phần tử của ma trận và đưa nó vào hàm ma trận. Ví dụ, để tạo một ma trận 100 X 2 các biến ngẫu nhiên có phân phối chuẩn ta viết:
+```{r}
+z <- matrix(rnorm(100*2), 100, 2)
+```
+
+Lưu ý rằng theo mặc định, ma trận được điền theo từng cột:
+```{r}
+matrix(1:15, 3, 5)
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    4    7   10   13
+#> [2,]    2    5    8   11   14
+#> [3,]    3    6    9   12   15
+```
+
+Để điền vào từng hàng của ma trận, chúng ta có thể sử dụng đối số byrow:
+```{r}
+matrix(1:15, 3, 5, byrow = TRUE)
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    2    3    4    5
+#> [2,]    6    7    8    9   10
+#> [3,]   11   12   13   14   15
+```
+Hàm as.vector chuyển đổi ma trận trở lại thành vectơ:
+```{r}
+as.vector(matrix(1:15, 3, 5))
+#>  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+```
+Nếu tích của các cột và hàng không khớp với độ dài của vectơ được cung cấp trong đối số đầu tiên, ma trận sẽ tái sử dụng các giá trị. Nếu độ dài của vectơ là bội số hoặc bội số của số hàng thì điều này xảy ra mà không có cảnh báo:
+```{r}
+matrix(1:3, 3, 5)
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    1    1    1    1
+#> [2,]    2    2    2    2    2
+#> [3,]    3    3    3    3    3
+```
+
+19.4 Đặt lại
+Chúng ta có thể trích xuất một mục cụ thể từ ma trận, ví dụ như hàng thứ 300 và cột thứ 100, chúng ta sử dụng viết:
+```{r}
+x[300,100]
+```
+Chúng ta có thể trích xuất các tập con của ma trận bằng cách sử dụng vectơ chỉ mục. Ví dụ: chúng ta có thể trích xuất 100 pixel đầu tiên từ 300 quan sát đầu tiên như thế này: và các hàng như thế này:
+```{r}
+x[1:300,1:100]
+```
+
+Để trích xuất toàn bộ một hàng hoặc tập hợp con của các hàng, chúng ta để trống kích thước cột. Vì vậy, đoạn mã sau trả về tất cả các pixel cho 300 quan sát đầu tiên:
+```{r}
+x[1:300,]
+```
+Tương tự, chúng ta có thể tập hợp con số lượng cột bất kỳ bằng cách giữ trống thứ nguyên đầu tiên. Đây là mã để trích xuất 100 pixel đầu tiên:
+```{r}
+x[,1:100]
+```
+Nếu chúng ta chỉ tập hợp một hàng hoặc chỉ một cột thì đối tượng thu được sẽ không còn là ma trận nữa. Đây là một ví dụ:
+```{r}
+dim(x[300,])
+#> NULL
+```
+Để tránh điều này chúng ta có thể sử dụng đối số drop:
+```{r}
+dim(x[100,,drop = FALSE])
+#> [1]   1 784
+```
+Nhiệm vụ 1: Trực quan hóa ảnh gốc
+Để làm ví dụ, chúng ta hãy thử hình dung quan sát thứ ba. Từ nhãn chúng ta biết đây là:
+```{r}
+mnist$train$label[3]
+#> [1] 4
+```
+Hàng thứ ba của ma trận x[3,] chứa mật độ 784 pixel. Chúng ta có thể giả sử những điểm được nhập theo thứ tự và chuyển chúng trở lại dạng ma trận 28 X 28 sử dụng:
+```{r}
+grid <- matrix(x[3,], 28, 28)
+```
+Để trực quan hóa dữ liệu, chúng ta có thể sử dụng hình ảnh, hiển thị hình ảnh của đối số thứ ba, với hai đối số đầu tiên để xác định vị trí tương ứng trên trục x và y. Bởi vì phần trên cùng của ô này là pixel 1, được hiển thị ở phía dưới nên hình ảnh bị lật. Mã bên dưới bao gồm mã hiển thị cách lật ngược lại:
+```{r}
+image(1:28, 1:28, grid)
+image(1:28, 1:28, grid[, 28:1])
+```
+19.5 Ký hiệu toán học
+Ma trận thường được biểu diễn bằng chữ in hoa đậm:
+với x i, j đại diện cho
+-tính năng dành cho
+-quan sát thứ
+
+Chúng tôi biểu thị các vectơ bằng chữ in đậm chữ thường và biểu diễn chúng dưới dạng ma trận một cột, thường được gọi là vectơ cột. R tuân theo quy ước này khi chuyển đổi vectơ thành ma trận:
+```{r}
+dim(matrix(x[300,]))
+#> [1] 784   1
+```
+Tuy nhiên, không nên nhầm lẫn vectơ cột với các cột của ma trận. Chúng có tên này đơn giản vì chúng có một cột.
+
+Các mô tả toán học của học máy thường tham chiếu đến các vectơ biểu diễn đặc trưng p:
+Để phân biệt giữa các đặc điểm liên quan đến quan sát i = 1,2,3,.., n chúng tôi thêm một chỉ mục:
+Chữ in thường in đậm cũng thường được sử dụng để biểu thị các cột ma trận thay vì các hàng. Điều này có thể gây nhầm lẫn vì có thể đại diện cho hàng đầu tiên hoặc cột đầu tiên của
+. Một cách để phân biệt là sử dụng ký hiệu tương tự như mã máy tính: sử dụng dấu hai chấm
+ để đại diện cho tất cả. Vì thế là một hàng, hàng đầu tiên và tất cả các cột, và là một cột, cột đầu tiên và tất cả các hàng. Một cách tiếp cận khác là phân biệt bằng chữ cái dùng để chỉ mục, với được sử dụng cho các hàng và dùng cho cột. Vì thế là hàng thứ và là cột thứ. Với cách tiếp cận này, điều quan trọng là phải làm rõ thứ nguyên, hàng hoặc cột nào đang được thể hiện. Sự nhầm lẫn hơn nữa có thể nảy sinh bởi vì, như đã thảo luận, người ta thường biểu diễn tất cả các vectơ dưới dạng ma trận 1 cột, bao gồm các hàng của ma trận.
+19.6 Chuyển vị
+Một thao tác phổ biến khi làm việc với ma trận là chuyển vị. Chúng tôi sử dụng chuyển vị để hiểu một số khái niệm được mô tả trong một số phần tiếp theo. Thao tác này chỉ đơn giản là chuyển đổi các hàng của ma trận thành các cột. Chúng tôi sử dụng các ký hiệu T hoặc '
+hoặc bên cạnh chữ in hoa đậm để biểu thị chuyển vị:
+Trong R, chúng tôi tính toán chuyển vị bằng hàm t
+```{r}
+dim(x)
+#> [1] 60000   784
+dim(t(x))
+#> [1]   784 60000
+```
+
+Một cách sử dụng của phép chuyển vị là chúng ta có thể viết ma trận X dưới dạng các hàng vectơ cột biểu thị các đặc điểm cho từng quan sát riêng lẻ theo cách sau:
+19.7 Tóm tắt hàng và cột
+Một phép toán thông thường với ma trận là áp dụng cùng một hàm cho mỗi hàng hoặc mỗi cột. Ví dụ: chúng ta có thể muốn tính trung bình hàng và độ lệch chuẩn. Chức năng apply cho phép bạn thực hiện việc này. Đối số đầu tiên là ma trận, đối số thứ hai là thứ nguyên, 1 cho hàng, 2 cho cột và đối số thứ ba là hàm được áp dụng.
+
+Vì vậy, ví dụ, để tính giá trị trung bình và độ lệch chuẩn của mỗi hàng, chúng ta viết:
+```{r}
+avgs <- apply(x, 1, mean)
+sds <- apply(x, 1, sd)
+```
+Để tính toán những giá trị này cho các cột, chúng ta chỉ cần thay đổi 1 thành 2:
+```{r}
+avgs <- apply(x, 1, mean)
+sds <- apply(x, 1, sd)
+```
+Vì những thao tác này rất phổ biến nên có sẵn các chức năng đặc biệt để thực hiện chúng. Vì vậy, ví dụ, các hàm rowMeans tính giá trị trung bình của mỗi hàng
+```{r}
+avg <- rowMeans(x)
+```
+
+và hàm MatrixStats rowSds tính toán độ lệch chuẩn cho mỗi hàng:
+```{r}
+library(matrixStats)
+sds <- rowSds(x)
+```
+Các hàm colMeans và colSds cung cấp phiên bản cho các cột. Để triển khai nhanh hơn, hãy xem các hàm có sẵn trong MatrixStats.
+Bài tập 2: Một số chữ số có cần nhiều mực để viết hơn những chữ số khác không?
+Đối với nhiệm vụ thứ hai, liên quan đến tổng độ tối của pixel, chúng tôi muốn xem mức sử dụng mực trung bình được vẽ trên chữ số. Chúng tôi đã tính mức trung bình này và có thể tạo biểu đồ hộp để trả lời câu hỏi:
+```{r}
+avg <- rowMeans(x)
+boxplot(avg ~ y)
+```
+Từ biểu đồ này, chúng ta thấy rằng, không có gì ngạc nhiên khi số 1 sử dụng ít mực hơn các chữ số khác.
+
+19.8 Lọc có điều kiện
+Một trong những ưu điểm của phép toán ma trận so với phép tính gọn gàng là chúng ta có thể dễ dàng chọn các cột dựa trên tóm tắt của các cột.
+
+Lưu ý rằng các bộ lọc logic có thể được sử dụng để tập hợp con ma trận theo cách tương tự như cách chúng có thể được sử dụng để tập hợp con vectơ. Dưới đây là một ví dụ đơn giản về việc chia nhỏ các cột bằng logic:
+```{r}
+matrix(1:15, 3, 5)[,c(FALSE, TRUE, TRUE, FALSE, TRUE)]
+#>      [,1] [,2] [,3]
+#> [1,]    4    7   13
+#> [2,]    5    8   14
+#> [3,]    6    9   15
+```
+Điều này ngụ ý rằng chúng ta có thể chọn các hàng có biểu thức điều kiện. Đây là ví dụ thực tế loại bỏ tất cả các quan sát chứa ít nhất một NA:
+```{r}
+x[apply(!is.na(x), 1, all),]
+```
+Đây là một hoạt động phổ biến nên chúng tôi có hàm MatrixStats để thực hiện việc đó nhanh hơn:
+```{r}
+x[!rowAnyNAs(x),]
+```
+Nhiệm vụ 3: Một số pixel có chứa thông tin không?
+Chúng tôi có thể sử dụng những ý tưởng này để xóa các cột được liên kết với các pixel không thay đổi nhiều và do đó không cung cấp thông tin phân loại chữ số. Chúng tôi sẽ định lượng sự biến đổi của từng pixel với độ lệch chuẩn của nó trên tất cả các mục. Vì mỗi cột đại diện cho một pixel nên chúng tôi sử dụng hàm colSds từ gói MatrixStats:
+```{r}
+sds <- colSds(x)
+```
+Nhìn nhanh vào sự phân bố của các giá trị này cho thấy rằng một số pixel có độ biến thiên từ đầu vào đến đầu vào rất thấp:
+```{r}
+hist(sds, breaks = 30, main = "SDs")
+```
+Điều này có ý nghĩa vì chúng ta không viết vào một số phần của ô. Đây là phương sai được vẽ theo vị trí:
+```{r}
+image(1:28, 1:28, matrix(sds, 28, 28)[, 28:1])
+```
+Chúng tôi thấy rằng có rất ít sự thay đổi ở các góc.
+
+Chúng tôi có thể xóa các tính năng không có biến thể vì những tính năng này không thể giúp chúng tôi dự đoán.
+
+Vì vậy, nếu muốn loại bỏ các yếu tố dự đoán không có thông tin khỏi ma trận, chúng ta có thể viết một dòng mã này:
+```{r}
+new_x <- x[,colSds(x) > 60]
+dim(new_x)
+#> [1] 60000   322
+```
+
+Chỉ các cột có độ lệch chuẩn trên 60 được giữ lại, loại bỏ hơn một nửa số dự đoán.
+
+19.9 Lập chỉ mục bằng ma trận
+Một hoạt động tạo điều kiện thuận lợi cho việc mã hóa hiệu quả là chúng ta có thể thay đổi các mục của ma trận dựa trên các điều kiện được áp dụng cho cùng ma trận đó. Đây là một ví dụ đơn giản:
+
+Để xem điều này có tác dụng gì, chúng ta xem xét một ma trận nhỏ hơn:
+```{r}
+mat <- matrix(1:15, 3, 5)
+mat[mat > 6 & mat < 12] <- 0
+mat
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    4    0    0   13
+#> [2,]    2    5    0    0   14
+#> [3,]    3    6    0   12   15
+```
+
+Một ứng dụng hữu ích của phương pháp này là chúng ta có thể thay đổi tất cả các mục NA của ma trận thành một thứ khác:
+```{r}
+x[!is.na(x)] <- 0
+```
+
+19.9.1 Nhiệm vụ 4: Chúng ta có thể loại bỏ vết ố không?
+Biểu đồ của tất cả dữ liệu dự đoán của chúng tôi:
+```{r}
+hist(as.vector(x), breaks = 30, main = "Pixel intensities")
+```
+
+cho thấy sự phân đôi rõ ràng được giải thích là các phần của hình ảnh có mực và các phần không có. Nếu chúng ta cho rằng các giá trị bên dưới, chẳng hạn như 50 là bị nhòe, thì chúng ta có thể nhanh chóng biến chúng thành 0 bằng cách sử dụng:
+```{r}
+new_x <- x
+new_x[new_x < 50] <- 0
+```
+
+Nhiệm vụ 5: Nhị phân dữ liệu
+Biểu đồ ở trên dường như gợi ý rằng dữ liệu này chủ yếu là nhị phân. Một pixel có mực hoặc không. Sử dụng những gì chúng ta đã học, chúng ta có thể nhị phân hóa dữ liệu chỉ bằng các phép toán ma trận:
+```{r}
+bin_x <- x
+bin_x[bin_x < 255/2] <- 0 
+bin_x[bin_x > 255/2] <- 1
+```
+Chúng ta cũng có thể chuyển đổi thành ma trận logic và sau đó ép buộc thành các số như thế này:
+```{r}
+bin_X <- (x > 255/2)*1
+```
+19.10 Vector hóa ma trận
+Trong R, nếu chúng ta trừ một vectơ khỏi ma trận, phần tử đầu tiên của vectơ sẽ bị trừ khỏi hàng đầu tiên, phần tử thứ hai khỏi hàng thứ hai, v.v. Sử dụng ký hiệu toán học, chúng ta sẽ viết nó như sau:
+Điều tương tự cũng đúng với các phép tính số học khác.
+
+Chức năng quét tạo điều kiện thuận lợi cho loại hoạt động này. Nó hoạt động tương tự để áp dụng. Nó lấy mỗi mục của một vectơ và áp dụng phép toán số học cho hàng tương ứng. Phép trừ là phép toán khớp mặc định. Vì vậy, ví dụ: để căn giữa mỗi hàng xung quanh giá trị trung bình, chúng ta có thể sử dụng:
+```{r}
+sweep(x, 1, rowMeans(x))
+```
+
+Nhiệm vụ 6: Chuẩn hóa chữ số
+Cách R vector hóa các phép tính số học ngụ ý rằng chúng ta có thể chia tỷ lệ cho từng hàng của ma trận như thế này:
+```{r}
+(x - rowMeans(x))/rowSds(x)
+```
+Nếu bạn muốn chia tỷ lệ cho từng cột, hãy cẩn thận vì phương pháp này không hiệu quả đối với các cột. Đối với các cột chúng ta có thể sweep:
+```{r}
+x_mean_0 <- sweep(x, 2, colMeans(x))
+```
+Để chia cho độ lệch chuẩn, ta thay phép tính số học mặc định thành phép chia như sau:
+```{r}
+x_standardized <- sweep(x_mean_0, 2, colSds(x), FUN = "/")
+```
+
+Trong R, nếu bạn cộng, trừ, nhân hoặc chia hai ma trận, phép toán được thực hiện theo từng phần tử. Ví dụ: nếu hai ma trận được lưu trữ trong x và y thì
+```{r}
+x*y
+```
+
+không dẫn đến phép nhân ma trận. Thay vào đó, mục trong hàng i và cột j của sản phẩm này là sản phẩm của mục nhập trong hàng i và cột j tương ứng của x và y.
+
+20 Đại số tuyến tính ứng dụng
+Đại số tuyến tính là kỹ thuật toán học chính được sử dụng để mô tả và thúc đẩy các phương pháp thống kê và phương pháp học máy. Trong chương này, chúng tôi giới thiệu một số khái niệm toán học cần thiết để hiểu các kỹ thuật này và trình bày cách làm việc với ma trận trong R. Chúng tôi sử dụng các khái niệm và kỹ thuật này trong suốt phần còn lại của cuốn sách. Chúng ta bắt đầu chương này bằng một ví dụ đầy động lực.
+
+20.1 Phép nhân ma trận
+Một thao tác thường được sử dụng trong phân tích dữ liệu là phép nhân ma trận. Ở đây chúng tôi xác định và thúc đẩy hoạt động.
+
+Đại số tuyến tính ra đời từ việc các nhà toán học phát triển các phương pháp có hệ thống để giải các hệ phương trình tuyến tính, chẳng hạn
+
+Các nhà toán học đã tìm ra rằng bằng cách biểu diễn các hệ phương trình tuyến tính này bằng ma trận và vectơ, các thuật toán xác định trước có thể được thiết kế để giải bất kỳ hệ phương trình tuyến tính nào. Một lớp đại số tuyến tính cơ bản sẽ dạy một số thuật toán này, chẳng hạn như loại bỏ Gaussian, loại bỏ Gauss-Jordan và phân tách LU và QR. Những phương pháp này thường được đề cập chi tiết trong các khóa học đại số tuyến tính cấp đại học.
+
+Để giải thích phép nhân ma trận, định nghĩa hai ma trận A Và B
+và xác định tích của ma trận Và như ma trận có mục bằng tổng của tích thành phần của
+hàng thứ với cột thứ của. Sử dụng mã R chúng ta có thể định nghĩa như sau:
+```{r}
+m <- nrow(A)
+p <- ncol(B)
+C <- matrix(0, m, p)
+for(i in 1:m){
+  for(j in 1:p){
+    C[i,j] <- sum(A[i,] * B[,j])
+  }
+}
+```
+
+Vì thao tác này rất phổ biến nên R bao gồm toán tử %*% để nhân ma trận:
+```{r}
+C <- A %*% B
+```
+
+Sử dụng ký hiệu toán học C = AB trông như thế này:
+Lưu ý định nghĩa này ngụ ý rằng phép nhân chỉ có thể thực hiện được khi số hàng của trùng với số cột của. Vậy định nghĩa phép nhân ma trận này giúp giải các hệ phương trình như thế nào? Đầu tiên, bất kỳ hệ phương trình nào có ẩn số bây giờ có thể được biểu diễn dưới dạng phép nhân ma trận bằng cách xác định các ma trận sau:
+và viết lại phương trình đơn giản như
+Các thuật toán đại số tuyến tính được liệt kê ở trên, chẳng hạn như loại bỏ Gaussian, cung cấp một cách tính toán ma trận nghịch đảo
+đó giải phương trình cho:
+Để giải phương trình đầu tiên chúng ta viết trong R, chúng ta có thể sử dụng hàm giải:
+```{r}
+A <- matrix(c(1, 3, -2, 3, 5, 6, 2, 4, 3), 3, 3, byrow = TRUE)
+b <- matrix(c(5, 7, 8))
+solve(A, b)
+```
+
+20.2 Ma trận nhận dạng
+Ma trận nhận dạng, được thể hiện bằng chữ in đậm, giống như số 1, nhưng đối với ma trận: nếu bạn nhân một ma trận với ma trận đẳng thức, bạn sẽ nhận được ma trận.
+Nếu bạn làm một số phép toán với định nghĩa của phép nhân ma trận, bạn sẽ nhận ra rằng là ma trận có cùng số hàng và số cột (gọi là ma trận vuông) có số 0 ở mọi nơi ngoại trừ đường chéo:
+Nó cũng ngụ ý rằng do định nghĩa của ma trận nghịch đảo chúng ta có
+Bởi vì mặc định cho đối số thứ hai trong giải là ma trận đồng nhất, nếu chúng ta chỉ cần gõ giải (A), chúng ta sẽ thu được kết quả nghịch đảo. Điều này có nghĩa là chúng ta cũng có thể thu được nghiệm của hệ phương trình với:
+```{r}
+solve(A) %*% b
+```
+
+20.3 Khoảng cách
+Nhiều phân tích chúng tôi thực hiện với dữ liệu nhiều chiều liên quan trực tiếp hoặc gián tiếp đến khoảng cách. Ví dụ: hầu hết các kỹ thuật học máy đều dựa vào khả năng xác định khoảng cách giữa các quan sát, sử dụng các tính năng hoặc yếu tố dự đoán. Các thuật toán phân cụm, ví dụ, tìm kiếm các quan sát tương tự nhau. Nhưng điều này có ý nghĩa gì về mặt toán học?
+
+Để xác định khoảng cách, chúng tôi giới thiệu một khái niệm đại số tuyến tính khác: chuẩn. Hãy nhớ lại rằng một điểm trong hai chiều có thể được biểu diễn dưới dạng tọa độ cực như sau:
+với Và. Nếu chúng ta coi điểm là vectơ cột hai chiều,xác định chuẩn mực của. Chuẩn có thể được coi là kích thước của vectơ hai chiều không kể hướng: nếu chúng ta thay đổi góc thì vectơ thay đổi nhưng kích thước thì không. Mục đích của việc xác định chuẩn mực là chúng ta có thể ngoại suy khái niệm kích thước sang các chiều cao hơn. Cụ thể, chúng ta viết chuẩn cho bất kỳ vectơ nào BẰNG:
+Chúng ta có thể sử dụng các khái niệm đại số tuyến tính đã học để định nghĩa chuẩn như sau:
+Để xác định khoảng cách, giả sử chúng ta có hai điểm hai chiều Và. Chúng ta có thể xác định mức độ giống nhau của chúng bằng cách sử dụng khoảng cách Euclide.
+Chúng ta biết rằng khoảng cách bằng chiều dài cạnh huyền:
+Lý do chúng tôi đưa ra định mức là vì khoảng cách này là kích thước của vectơ giữa hai điểm và điều này có thể được ngoại suy theo bất kỳ chiều nào. Khoảng cách giữa hai điểm, bất kể kích thước, được xác định là chuẩn mực của sự khác biệt:
+Nếu chúng ta sử dụng dữ liệu chữ số, khoảng cách giữa quan sát thứ nhất và thứ hai sẽ tính khoảng cách bằng tất cả 784 đặc điểm:
+Để chứng minh, hãy chọn các tính năng cho ba chữ số:
+```{r}
+x_1 <- x[6,]
+x_2 <- x[17,]
+x_3 <- x[16,]
+```
+Chúng ta có thể tính khoảng cách giữa mỗi cặp bằng cách sử dụng các định nghĩa vừa học:
+```{r}
+c(sum((x_1 - x_2)^2), sum((x_1 - x_3)^2), sum((x_2 - x_3)^2)) |> sqrt()
+#> [1] 2320 2331 2519
+```
+Trong R, hàm crossprod(x) thuận tiện cho việc tính toán các định mức nó nhân t(x) với x
+```{r}
+c(crossprod(x_1 - x_2), crossprod(x_1 - x_3), crossprod(x_2 - x_3)) |> sqrt()
+#> [1] 2320 2331 2519
+```
+Lưu ý crossprod lấy ma trận làm đối số đầu tiên và do đó các vectơ được sử dụng ở đây đang bị ép buộc thành các ma trận cột đơn. Cũng lưu ý rằng crossprod(x,y) nhân t(x) với y.
+
+Chúng ta có thể thấy rằng khoảng cách giữa hai khoảng cách đầu tiên nhỏ hơn. Điều này phù hợp với thực tế là hai số đầu tiên là số 2 và số thứ ba là số 7.
+```{r}
+y[c(6, 17, 16)]
+#> [1] 2 2 7
+```
+
+Chúng ta cũng có thể tính toán tất cả các khoảng cách cùng một lúc một cách tương đối nhanh chóng bằng cách sử dụng hàm dist, hàm này tính khoảng cách giữa mỗi hàng và tạo ra một đối tượng thuộc lớp dist:
+```{r}
+d <- dist(x[c(6,17,16),])
+class(d)
+#> [1] "dist"
+```
+
+Có một số hàm liên quan đến học máy trong R lấy các đối tượng của lớp dist làm đầu vào. Để truy cập các mục bằng chỉ mục hàng và cột, chúng ta cần ép buộc nó vào một ma trận. Chúng ta có thể thấy khoảng cách mình đã tính ở trên như thế này:
+```{r}
+d
+#>      1    2
+#> 2 2320     
+#> 3 2331 2519
+```
+
+Chúng ta có thể nhanh chóng nhìn thấy hình ảnh về khoảng cách giữa các quan sát bằng chức năng này. Ví dụ: chúng tôi tính toán khoảng cách giữa mỗi quan sát trong số 300 quan sát đầu tiên và sau đó tạo một hình ảnh: Chúng tôi có thể nhanh chóng xem hình ảnh về khoảng cách giữa các quan sát bằng chức năng này. Ví dụ: chúng tôi tính toán khoảng cách giữa mỗi quan sát trong số 300 quan sát đầu tiên và sau đó tạo một hình ảnh:
+```{r}
+d <- dist(x[1:300,])
+image(as.matrix(d))
+```
+Nếu chúng ta sắp xếp khoảng cách này theo nhãn, chúng ta có thể thấy các ô vuông màu vàng gần đường chéo. Điều này là do các quan sát từ cùng một chữ số có xu hướng gần hơn so với các chữ số khác nhau:
+```{r}
+image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
+```
+20.4 Dấu cách
+Không gian dự đoán là một khái niệm thường được sử dụng để mô tả các thuật toán học máy. Thuật ngữ không gian đề cập đến một định nghĩa toán học nâng cao mà chúng tôi đưa ra lời giải thích đơn giản để giúp hiểu thuật ngữ không gian dự đoán khi được sử dụng trong bối cảnh thuật toán học máy.
+
+Chúng ta có thể nghĩ đến tất cả các yếu tố dự đoán cho mọi quan sát BẰNG-điểm chiều. Một không gian có thể được coi là tập hợp tất cả các điểm có thể cần được xem xét để phân tích dữ liệu được đề cập. Điều này bao gồm những điểm chúng ta có thể nhìn thấy nhưng chưa được quan sát. Trong trường hợp các chữ số viết tay, chúng ta có thể coi không gian dự đoán là bất kỳ điểm nàomiễn là mỗi mụcnằm trong khoảng từ 0 đến 255.
+
+Một số thuật toán Machine Learning cũng xác định các không gian con. Một cách tiếp cận phổ biến là xác định các vùng lân cận của các điểm gần tâm. Chúng ta có thể làm điều này bằng cách chọn một trung tâm, khoảng cách tối thiểuvà xác định không gian con là tập hợp các điểm thỏa mãn Chúng ta có thể coi không gian con này như một hình cầu đa chiều vì mọi điểm đều cách tâm một khoảng như nhau.
+Các thuật toán học máy khác phân chia không gian dự đoán thành các vùng không chồng chéo và sau đó đưa ra các dự đoán khác nhau cho từng vùng bằng cách sử dụng dữ liệu trong vùng. Chúng ta sẽ tìm hiểu về những điều này trong Phần 29.5.
+
+21 Giảm kích thước
+Một nhiệm vụ học máy điển hình liên quan đến việc làm việc với một số lượng lớn các yếu tố dự đoán, điều này khiến cho việc hình dung trở nên khó khăn. Chúng tôi đã chỉ ra các phương pháp trực quan hóa dữ liệu đơn biến và dữ liệu ghép nối, nhưng các biểu đồ thể hiện mối quan hệ giữa nhiều biến sẽ phức tạp hơn ở các chiều cao hơn. Ví dụ: để so sánh từng đặc điểm trong số 784 đặc điểm trong ví dụ về chữ số dự đoán của chúng tôi, chúng tôi sẽ phải tạo, chẳng hạn như 306.936 biểu đồ phân tán. Việc tạo một biểu đồ phân tán duy nhất của dữ liệu là không thể do tính chiều cao.
+
+Ở đây chúng tôi mô tả các kỹ thuật mạnh mẽ hữu ích cho việc phân tích dữ liệu khám phá, trong số những thứ khác, thường được gọi là giảm kích thước. Ý tưởng chung là giảm kích thước của tập dữ liệu trong khi vẫn giữ được các đặc điểm quan trọng, chẳng hạn như khoảng cách giữa các đối tượng hoặc quan sát. Với ít kích thước hơn, việc hình dung sẽ trở nên khả thi hơn. Kỹ thuật chung đằng sau tất cả, phân rã giá trị số ít, cũng hữu ích trong các bối cảnh khác. Phân tích thành phần chính (PCA) là phương pháp chúng tôi sẽ trình bày. Chúng tôi sẽ thúc đẩy các ý tưởng bằng một ví dụ minh họa đơn giản và trình bày một số khái niệm toán học cần thiết để hiểu PCA. Chúng tôi kết thúc chương này bằng việc chứng minh việc sử dụng PCA trong hai bộ dữ liệu phức tạp hơn.
+
+21.1 Động lực: giữ khoảng cách
+Chúng tôi xem xét một ví dụ với chiều cao gấp đôi. Một số cặp là người lớn, số khác là trẻ em. Ở đây chúng tôi mô phỏng 100 điểm hai chiều biểu thị số độ lệch chuẩn của mỗi cá nhân so với chiều cao trung bình. Mỗi điểm là một cặp song sinh. Chúng tôi sử dụng hàm mvrnorm từ gói MASS để mô phỏng dữ liệu thông thường hai biến.
+```{r}
+set.seed(1983)
+library(MASS)
+n <- 100
+rho <- 0.9
+sigma <- 3
+s <- sigma^2*matrix(c(1, rho, rho, 1), 2, 2)
+x <- rbind(mvrnorm(n/2, c(69, 69), s),
+           mvrnorm(n/2, c(60, 60), s))
+```
+
+Biểu đồ phân tán nhanh chóng cho thấy mối tương quan rất cao và có hai nhóm sinh đôi, người lớn (điểm phía trên bên phải) và trẻ em (điểm phía dưới bên trái):
+Tính năng của chúng tôi là
+ điểm hai chiều, hai chiều cao. Với mục đích minh họa, chúng tôi sẽ hành động như thể việc hình dung hai chiều là quá khó khăn và chúng tôi muốn khám phá dữ liệu thông qua biểu đồ của biến một chiều. Do đó, chúng tôi muốn giảm kích thước từ hai xuống một, nhưng vẫn có thể hiểu được các đặc điểm quan trọng của dữ liệu, ví dụ: các quan sát tập hợp thành hai nhóm: người lớn và trẻ em. Để cho thấy những ý tưởng được trình bày ở đây nhìn chung là hữu ích, chúng tôi sẽ chuẩn hóa dữ liệu để các quan sát được tính bằng đơn vị tiêu chuẩn thay vì inch:
+```{r}
+library(matrixStats)
+#> 
+#> Attaching package: 'matrixStats'
+#> The following object is masked from 'package:dplyr':
+#> 
+#>     count
+x <- sweep(x, 2, colMeans(x))
+x <- sweep(x, 2, colSds(x), "/")
+```
+ 
+Trong hình trên, chúng tôi hiển thị khoảng cách giữa quan sát 1 và 2 (màu xanh) và quan sát 1 và 51 (màu đỏ). Lưu ý rằng đường màu xanh ngắn hơn, ngụ ý 1 và 2 gần nhau hơn.
+
+Chúng ta có thể tính toán những khoảng cách này bằng cách sử dụng dist:
+```{r}
+d <- dist(x)
+as.matrix(d)[1, 2]
+#> [1] 0.595
+as.matrix(d)[2, 51]
+#> [1] 1.39
+```
+
+Khoảng cách này dựa trên hai chiều và chúng ta cần xấp xỉ khoảng cách chỉ dựa trên một chiều.
+
+Hãy bắt đầu với cách tiếp cận đơn giản là loại bỏ một trong hai chiều. Hãy so sánh khoảng cách thực tế với khoảng cách được tính chỉ bằng chiều thứ nhất:
+```{r}
+z <- x[,1]
+```
+
+Để làm cho các khoảng cách có thể so sánh được, chúng ta chia tổng bình phương cho số chiều được thêm vào. Vì vậy, đối với trường hợp hai chiều chúng ta có
+vì vậy để so sánh khoảng cách chúng ta chia cho căn 2:
+```{r}
+plot(dist(x) / sqrt(2), dist(z))
+abline(0, 1, col = "red")
+```
+
+Bản tóm tắt một số này có hiệu quả trong việc duy trì khoảng cách, nhưng liệu chúng ta có thể chọn bản tóm tắt một chiều làm cho phép tính gần đúng thậm chí còn tốt hơn không?
+
+Nếu chúng ta nhìn lại biểu đồ phân tán và hình dung một đường thẳng giữa bất kỳ cặp điểm nào, thì độ dài của đường này là khoảng cách giữa hai điểm. Những đường này có xu hướng đi dọc theo hướng của đường chéo. Chúng ta sẽ biết rằng chúng ta có thể xoay các điểm theo cách duy trì khoảng cách giữa các điểm, đồng thời tăng độ biến thiên theo một chiều và giảm độ biến thiên ở chiều kia. Bằng cách này, chúng tôi lưu giữ được nhiều thông tin hơn về khoảng cách ở chiều thứ nhất. Trong phần tiếp theo, chúng ta mô tả một phương pháp toán học cho phép chúng ta tìm các phép quay bảo toàn khoảng cách giữa các điểm. Sau đó, chúng ta có thể tìm phép quay làm tối đa hóa độ biến thiên trong chiều thứ nhất.
+21.2 Phép quay
+Bất kỳ điểm hai chiều nào có thể được viết dưới dạng đáy và chiều cao của một tam giác có cạnh huyền đi từ ĐẾN:với độ dài cạnh huyền và thiên thần giữa cạnh huyền và trục x.
+Chúng ta có thể xoay điểm quanh một đường tròn có tâm và bán kính theo một góc bằng cách thay đổi góc trong phương trình trước thành:
+Chúng ta có thể sử dụng đồng nhất thức lượng giác để viết lại theo cách sau:
+Bây giờ chúng ta có thể xoay từng điểm trong tập dữ liệu bằng cách áp dụng công thức trên cho từng cặp. Đây là hình dạng của chiều cao tiêu chuẩn hóa đôi sau khi xoay từng điểm theo
+độ:
+Lưu ý rằng mặc dù sự biến thiên của
+ Và
+ giống nhau, độ biến thiên của
+ lớn hơn nhiều so với độ biến thiên của
+. Cũng lưu ý rằng khoảng cách giữa các điểm dường như được giữ nguyên. Trong các phần tiếp theo, chúng tôi sẽ chỉ ra, về mặt toán học, điều này thực tế đúng như vậy.
+
+21.3 Các phép biến đổi tuyến tính
+Bất cứ lúc nào một ma trận
+ được nhân với một ma trận khác
+, chúng tôi tham khảo sản phẩm
+ như một phép biến đổi tuyến tính của
+. Dưới đây chúng tôi chỉ ra rằng các phép quay được mô tả ở trên là một phép biến đổi tuyến tính. Để thấy điều này, hãy lưu ý rằng đối với bất kỳ hàng nào
+, mục đầu tiên là:với Và.
+Mục thứ hai cũng là một phép biến đổi tuyến tính:với Và.
+Chúng ta có thể viết các phương trình này bằng ký hiệu ma trận:
+Một lợi thế của việc sử dụng đại số tuyến tính là chúng ta có thể viết phép biến đổi cho toàn bộ tập dữ liệu bằng cách lưu tất cả các quan sát vào một tập dữ liệu.ma trận
+Sau đó chúng ta có thể thu được các giá trị xoay Cho mỗi hàng bằng cách áp dụng một phép biến đổi tuyến tính của:
+Nếu chúng ta định nghĩa
+```{r}
+theta <- 2*pi*-45/360 #convert to radians
+A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
+```
+Chúng ta có thể viết mã thực hiện xoay theo bất kỳ góc nào sử dụng đại số tuyến tính:
+```{r}
+rotate <- function(x, theta){
+  theta <- 2*pi*theta/360
+  A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
+  x %*% A
+}
+```
+
+Các cột của được gọi là chỉ đường vì nếu chúng ta vẽ một vectơ từ ĐẾN nó chỉ theo hướng của đường sẽ trở thành kích thước.
+Một ưu điểm khác của đại số tuyến tính là nếu chúng ta có thể tìm được ma trận nghịch đảo của chúng ta có thể chuyển đổi Quay lại lại sử dụng phép biến đổi tuyến tính.
+Trong trường hợp cụ thể này, chúng ta có thể sử dụng lượng giác để chỉ ra rằng với
+Điều này ngụ ý rằng Lưu ý rằng phép biến đổi được sử dụng ở trên thực tế là ngụ ý rằng và do đó là nghịch đảo của. Điều này cũng hàm ý rằng tất cả thông tin trong được bao gồm trong vòng quay , và nó có thể được lấy ra thông qua một phép biến đổi tuyến tính. Một hệ quả là đối với bất kỳ phép quay nào thì khoảng cách được bảo toàn. Đây là một ví dụ về xoay 30 độ, nhưng nó hoạt động với mọi góc độ:
+```{r}
+all.equal(as.matrix(dist(rotate(x, 30))), as.matrix(dist(x)))
+#> [1] TRUE
+```
+Phần tiếp theo giải thích tại sao điều này xảy ra.
+
+21.4 Phép biến đổi trực giao
+Hãy nhớ lại rằng khoảng cách giữa hai điểm, chẳng hạn như hàng Và của sự biến đổi, có thể được viết như thế này: với Và các vectơ cột được lưu trữ trong-th và -hàng thứ của, tương ứng.Hãy nhớ rằng chúng ta biểu diễn các hàng của ma trận dưới dạng vectơ cột. Điều này giải thích tại sao chúng tôi sử dụng khi hiển thị phép nhân cho ma trận nhưng chuyển đổi thao tác khi hiển thị phép biến đổi chỉ cho một quan sát:
+
+Sử dụng đại số tuyến tính, chúng ta có thể viết lại đại lượng trên dưới dạng
+Lưu ý rằng nếu thì khoảng cách giữa thứ và hàng thứ giống nhau đối với dữ liệu gốc và dữ liệu được chuyển đổi. Chúng ta đề cập đến phép biến đổi với tính chất như một phép biến đổi trực giao và chúng được đảm bảo duy trì khoảng cách giữa hai điểm bất kỳ.
+
+Trước đây chúng tôi đã chứng minh vòng quay của chúng tôi có đặc tính này. Chúng tôi có thể xác nhận bằng R:
+```{r}
+A %*% t(A)
+#>          [,1]     [,2]
+#> [1,] 1.00e+00 1.01e-17
+#> [2,] 1.01e-17 1.00e+00
+```
+
+Thông báo rằng trực giao cũng đảm bảo rằng tổng bình phương (TSS) của, định nghĩa là bằng tổng bình phương của phép quay. Để hiển thị thông báo này rằng nếu chúng tôi biểu thị các hàng của BẰNG, thì tổng bình phương có thể được viết là:
+Chúng tôi có thể xác nhận bằng R:
+```{r}
+theta <- -45
+z <- rotate(x, theta) # works for any theta
+sum(x^2)
+#> [1] 198
+sum(z^2)
+#> [1] 198
+```
+của nó có thể được hiểu là hệ quả của thực tế là phép biến đổi trực giao đảm bảo rằng tất cả thông tin được bảo toàn.
+
+Tuy nhiên, mặc dù tổng số được giữ nguyên nhưng tổng bình phương của các cột riêng lẻ sẽ thay đổi. Ở đây chúng tôi tính toán tỷ lệ TSS được quy cho mỗi cột, được gọi là phương sai được giải thích hoặc phương sai được ghi lại bởi mỗi cột, ví dụ:
+```{r}
+colSums(x^2)/sum(x^2)
+#> [1] 0.5 0.5
+```
+và Z
+```{r}
+colSums(z^2)/sum(z^2)
+#> [1] 0.9848 0.0152
+```
+Trong phần tiếp theo, chúng tôi mô tả kết quả toán học cuối cùng này có thể hữu ích như thế nào.
+
+21.5 Phân tích thành phần chính (PCA)
+Chúng ta đã chứng minh rằng các phép biến đổi trực giao bảo toàn khoảng cách giữa các quan sát và tổng bình phương. Chúng tôi cũng đã xác định rằng, mặc dù TSS vẫn giữ nguyên nhưng cách phân bổ tổng số này trên các cột có thể thay đổi.
+
+Ý tưởng chung đằng sau Phân tích Thành phần Chính (PCA) là cố gắng tìm các phép biến đổi trực giao tập trung phương sai được giải thích trong một số cột đầu tiên. Sau đó, chúng ta có thể tập trung vào một vài cột này, giảm bớt quy mô của vấn đề một cách hiệu quả. Trong ví dụ cụ thể của chúng tôi, chúng tôi đang tìm kiếm phép quay tối đa hóa phương sai được giải thích trong cột đầu tiên. Đoạn mã sau thực hiện tìm kiếm lưới trên các góc quay từ -90 đến 0:
+```{r}
+angles <- seq(0, -90)
+v <- sapply(angles, function(angle) colSums(rotate(x, angle)^2))
+variance_explained <- v[1,]/sum(x^2)
+plot(angles, variance_explained, type = "l")
+```
+
+Chúng tôi thấy rằng góc quay -45 độ dường như đạt được mức tối đa, với hơn 98% tổng số biến thiên được giải thích bởi chiều thứ nhất. Chúng tôi có thể xoay toàn bộ tập dữ liệu bằng cách sử dụng:
+```{r}
+z <- x %*% A
+```
+
+Hoạt ảnh sau đây minh họa thêm cách các phép quay khác nhau ảnh hưởng đến độ biến thiên được giải thích bằng kích thước của dữ liệu được xoay:
+
+#> Xuất ra tại: pca.gif
+Chiều đầu tiên của z được gọi là thành phần chính thứ nhất (PC). Bởi vì hầu hết tất cả các biến thể đều được giải thích bằng PC đầu tiên này, nên khoảng cách giữa các hàng trong x có thể gần đúng bằng khoảng cách được tính chỉ với z[,1].
+Chúng tôi cũng nhận thấy rằng có thể quan sát rõ ràng hai nhóm, người lớn và trẻ em bằng bản tóm tắt bằng một con số, tốt hơn bất kỳ nhóm nào trong hai nhóm ban đầu.
+```{r}
+hist(x[,1], breaks = seq(-4,4,0.5))
+hist(x[,2], breaks = seq(-4,4,0.5))
+hist(z[,1], breaks = seq(-4,4,0.5))
+```
+Chúng ta có thể hình dung những điều này để xem thành phần đầu tiên tóm tắt dữ liệu như thế nào. Trong biểu đồ bên dưới, màu đỏ đại diện cho giá trị cao và giá trị âm màu xanh:
+Ý tưởng này khái quát hóa cho các chiều cao hơn 2. Như chúng ta đã làm trong ví dụ hai chiều, chúng ta bắt đầu bằng việc tìm vectơ với tối đa hóa.là chiếc PC đầu tiên Để tìm PC thứ hai, chúng tôi trừ đi biến thể do PC thứ nhất giải thích khỏi:
+và sau đó tìm vectơ với tối đa hóa.là chiếc PC thứ hai. Sau đó, chúng tôi trừ đi biến thể được giải thích bởi hai PC đầu tiên và tiếp tục quá trình này cho đến khi chúng tôi có toàn bộ ma trận xoay và ma trận của các thành phần chính tương ứng:
+Ý tưởng bảo toàn khoảng cách mở rộng đến các chiều cao hơn. Đối với ma trận nhiều chiều với cột, các phép biến đổi duy trì khoảng cách giữa các hàng, nhưng với phương sai được biểu thị bằng các cột theo thứ tự giảm dần. Nếu phương sai của các cột, rất nhỏ, những kích thước này ít đóng góp vào việc tính toán khoảng cách và chúng ta có thể tính gần đúng khoảng cách giữa hai điểm bất kỳ chỉ bằng kích thước. Nếu như nhỏ hơn nhiều so với, thì chúng ta có thể đạt được một bản tóm tắt dữ liệu rất hiệu quả.
+Lưu ý rằng giải pháp cho vấn đề tối đa hóa này không phải là duy nhất bởi vì. Cũng lưu ý rằng nếu chúng ta nhân một cột của qua chúng tôi vẫn đại diện BẰNG miễn là chúng ta cũng nhân cột tương ứng của bởi 1. Điều này ngụ ý rằng dấu của mỗi cột của phép quay và ma trận thành phần chính là tùy ý.
+Trong R, chúng ta có thể tìm thấy các thành phần chính của bất kỳ ma trận nào với hàm prcomp:
+```{r}
+pca <- prcomp(x, center = FALSE)
+```
+Lưu ý rằng hành vi mặc định là căn giữa các cột của x trước khi tính toán PC, một thao tác chúng ta không cần vì ma trận của chúng ta được chia tỷ lệ.Đối tượng pca bao gồm dữ liệu được xoay trong pca$x và vòng quay trong vòng quay pca$.
+Chúng ta có thể thấy rằng các cột của phép quay pca$ thực sự là phép quay thu được với -45 (hãy nhớ dấu là tùy ý)
+```{r}
+pca$rotation
+#>         PC1    PC2
+#> [1,] -0.707  0.707
+#> [2,] -0.707 -0.707
+```
+
+Căn bậc hai của biến thể của mỗi cột được bao gồm trong thành phần pca$sdev. Điều này ngụ ý rằng chúng ta có thể tính toán phương sai được giải thích bởi mỗi PC bằng cách sử dụng:
+```{r}
+pca$sdev^2/sum(pca$sdev^2)
+#> [1] 0.9848 0.0152
+```
+Tóm tắt hàm thực hiện phép tính này cho chúng ta:
+```{r}
+summary(pca)
+#> Importance of components:
+#>                          PC1    PC2
+#> Standard deviation     1.403 0.1745
+#> Proportion of Variance 0.985 0.0152
+#> Cumulative Proportion  0.985 1.0000
+```
+Chúng ta cũng thấy rằng chúng ta có thể biến đổi giữa x () và pca$x () như được giải thích bằng các công thức toán học ở trên:
+```{r}
+all.equal(pca$x, x %*% pca$rotation)
+#> [1] TRUE
+all.equal(x, pca$x %*% t(pca$rotation))
+#> [1] TRUE
+```
+21.6 Ví dụ
+21.6.1 Ví dụ về mống mắt
+Dữ liệu mống mắt là một ví dụ được sử dụng rộng rãi trong các khóa học phân tích dữ liệu. Nó bao gồm bốn phép đo thực vật liên quan đến ba loài hoa:
+```{r}
+names(iris)
+#> [1] "Sepal.Length" "Sepal.Width"  "Petal.Length" "Petal.Width" 
+#> [5] "Species"
+```
+Nếu bạn in iris$Species bạn sẽ thấy dữ liệu được sắp xếp theo loài.
+
+Nếu hình dung khoảng cách chúng ta có thể thấy rõ ba loài với một loài rất khác biệt với hai loài còn lại:
+```{r}
+x <- iris[,1:4] |> as.matrix()
+d <- dist(x)
+image(as.matrix(d), col = rev(RColorBrewer::brewer.pal(9, "RdBu")))
+```
+Ma trận tính năng của chúng tôi có bốn chiều, nhưng ba chiều rất tương quan với nhau:
+```{r}
+cor(x)
+#>              Sepal.Length Sepal.Width Petal.Length Petal.Width
+#> Sepal.Length        1.000      -0.118        0.872       0.818
+#> Sepal.Width        -0.118       1.000       -0.428      -0.366
+#> Petal.Length        0.872      -0.428        1.000       0.963
+#> Petal.Width         0.818      -0.366        0.963       1.000
+```
+
+Nếu áp dụng PCA, chúng ta sẽ có thể ước chừng khoảng cách này chỉ với hai chiều, nén các chiều có mối tương quan cao. Sử dụng chức năng tóm tắt, chúng ta có thể thấy sự thay đổi được giải thích bởi mỗi PC:
+```{r}
+pca <- prcomp(x)
+summary(pca)
+#> Importance of components:
+#>                          PC1    PC2    PC3     PC4
+#> Standard deviation     2.056 0.4926 0.2797 0.15439
+#> Proportion of Variance 0.925 0.0531 0.0171 0.00521
+#> Cumulative Proportion  0.925 0.9777 0.9948 1.00000
+```
+
+Hai chiều đầu tiên chiếm gần 98% độ biến thiên. Vì vậy, chúng ta có thể ước chừng khoảng cách rất tốt với hai chiều. Chúng tôi xác nhận điều này bằng cách tính khoảng cách từ hai chiều đầu tiên và so sánh với chiều ban đầu:
+```{r}
+d_approx <- dist(pca$x[, 1:2])
+plot(d, d_approx); abline(0, 1, col = "red")
+```
+Một ứng dụng hữu ích của kết quả này là giờ đây chúng ta có thể hình dung khoảng cách giữa mỗi lần quan sát bằng đồ thị hai chiều.
+```{r}
+data.frame(pca$x[,1:2], Species = iris$Species) |>
+  ggplot(aes(PC1, PC2, fill = Species)) +
+  geom_point(cex = 3, pch = 21) +
+  coord_fixed(ratio = 1)
+```
+Chúng tôi tô màu quan sát bằng nhãn của chúng và nhận thấy rằng với hai chiều này, chúng tôi đạt được sự phân tách gần như hoàn hảo.
+
+Nhìn kỹ hơn vào các PC và vòng quay kết quả:
+chúng ta biết rằng PC đầu tiên thu được bằng cách lấy giá trị trung bình có trọng số của chiều dài đài hoa, chiều dài cánh hoa và chiều rộng cánh hoa, vì chúng có màu đỏ ở cột đầu tiên và trừ đi chiều rộng cánh hoa có trọng số, vì đây là màu xanh lam. PC thứ hai là giá trị trung bình có trọng số của chiều dài cánh hoa và chiều rộng cánh hoa trừ đi giá trị trung bình có trọng số của chiều dài đài hoa và chiều rộng cánh hoa.
+
+21.6.2 Ví dụ về MNIST
+Ví dụ về chữ số viết có 784 tính năng. Có chỗ nào để giảm dữ liệu không? Chúng tôi sẽ sử dụng PCA để trả lời điều này.
+Hãy tải dữ liệu nếu chưa được tải:
+```{r}
+library(dslabs)
+if (!exists("mnist")) mnist <- read_mnist()
+```
+Vì các pixel quá nhỏ nên chúng tôi mong đợi các pixel gần nhau trên lưới sẽ có mối tương quan, nghĩa là có thể giảm kích thước.
+
+Hãy tính toán các PC. Việc này sẽ mất vài giây vì đây là một ma trận khá lớn.
+```{r}
+pca <- prcomp(mnist$train$images)
+```
+```{r}
+plot(pca$sdev^2/sum(pca$sdev^2), xlab = "PC", ylab = "Variance explained")
+```
+Chúng ta có thể thấy rằng một số PC đầu tiên đã giải thích được phần lớn sự biến đổi:
+
+Và chỉ cần nhìn vào hai chiếc PC đầu tiên chúng ta đã thấy thông tin về nhãn mác. Đây là một mẫu ngẫu nhiên gồm 500 chữ số:
+```{r}
+data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], label = factor(mnist$train$label)) |>
+  sample_n(500) |>
+  ggplot(aes(PC1, PC2, fill = label)) +
+  geom_point(cex = 3, pch = 21)
+```
+
+Chúng ta cũng có thể xem các kết hợp tuyến tính trên lưới để biết cách các pixel tính toán bốn thành phần chính đầu tiên:
+Chúng ta có thể thấy rõ rằng PC đầu tiên dường như đang tách các số 1 (màu đỏ) khỏi số 0 (màu xanh). Chúng tôi cũng có thể tìm ra các con số trên ba chiếc PC còn lại. Bằng cách xem xét các PC được phân tầng theo chữ số, chúng tôi sẽ hiểu rõ hơn. Ví dụ: chúng ta thấy rằng PC thứ hai tách 4s, 7s và 9s khỏi phần còn lại:
+Chúng tôi cũng có thể xác nhận rằng các PC có phương sai thấp hơn dường như liên quan đến khả năng biến đổi không quan trọng, chủ yếu là các vết nhòe ở các góc:
+22 Chính quy hóa
+22.1 Nghiên cứu trường hợp: hệ thống khuyến nghị
+Hệ thống khuyến nghị sử dụng xếp hạng mà người dùng đã đưa ra để đưa ra các đề xuất cụ thể. Các công ty bán nhiều sản phẩm cho nhiều khách hàng và cho phép những khách hàng này đánh giá sản phẩm của họ, như Amazon, có thể thu thập các bộ dữ liệu khổng lồ có thể được sử dụng để dự đoán xếp hạng mà một người dùng cụ thể sẽ đưa ra cho một mặt hàng cụ thể. Các mặt hàng được dự đoán xếp hạng cao cho một người dùng nhất định sau đó sẽ được đề xuất cho người dùng đó.
+
+Netflix sử dụng hệ thống đề xuất để dự đoán số lượng sao mà người dùng sẽ cho một bộ phim cụ thể. Một sao cho rằng đây không phải là một bộ phim hay, trong khi năm sao cho rằng đây là một bộ phim xuất sắc. Tại đây, chúng tôi cung cấp thông tin cơ bản về cách đưa ra những đề xuất này, được thúc đẩy bởi một số phương pháp tiếp cận được thực hiện bởi những người chiến thắng trong các thử thách Netflix.
+
+Vào tháng 10 năm 2006, Netflix đưa ra một thách thức cho cộng đồng khoa học dữ liệu: cải thiện thuật toán đề xuất của chúng tôi thêm 10% và giành được một triệu đô la. Vào tháng 9 năm 2009, những người chiến thắng đã được công bố1. Bạn có thể đọc bản tóm tắt hay về cách kết hợp thuật toán chiến thắng tại đây: http://blog.echen.me/2011/10/24/winning-the-netflix-prize-a-summary/ và giải thích chi tiết hơn tại đây : https://www2.seas.gwu.edu/~simhaweb/champalg/cf/papers/KorenBellKor2009.pdf. Bây giờ chúng tôi sẽ chỉ cho bạn một số chiến lược phân tích dữ liệu được nhóm chiến thắng sử dụng.
+
+22.1.1 Dữ liệu thấu kính phim
+Dữ liệu Netflix không được công khai nhưng phòng nghiên cứu GroupLens2 đã tạo cơ sở dữ liệu của riêng họ với hơn 20 triệu xếp hạng cho hơn 27.000 phim bởi hơn 138.000 người dùng. Chúng tôi cung cấp một tập hợp con nhỏ của dữ liệu này thông qua gói dslabs:
+```{r}
+movielens |> as_tibble()
+#> # A tibble: 100,004 × 7
+#>   movieId title                      year genres userId rating timestamp
+#>     <int> <chr>                     <int> <fct>   <int>  <dbl>     <int>
+#> 1      31 Dangerous Minds            1995 Drama       1    2.5    1.26e9
+#> 2    1029 Dumbo                      1941 Anima…      1    3      1.26e9
+#> 3    1061 Sleepers                   1996 Thril…      1    3      1.26e9
+#> 4    1129 Escape from New York       1981 Actio…      1    2      1.26e9
+#> 5    1172 Cinema Paradiso (Nuovo c…  1989 Drama       1    4      1.26e9
+#> # ℹ 99,999 more rows
+```
+
+Mỗi hàng thể hiện xếp hạng do một người dùng đưa ra cho một bộ phim.
+
+Chúng ta có thể thấy số lượng người dùng duy nhất đã đưa ra xếp hạng và số lượng phim độc đáo được xếp hạng:
+```{r}
+movielens |> 
+  summarize(n_users = n_distinct(userId),
+            n_movies = n_distinct(movieId))
+#>   n_users n_movies
+#> 1     671     9066
+```
+Nếu nhân hai số đó, chúng ta sẽ có một số lớn hơn 5 triệu, tuy nhiên bảng dữ liệu của chúng ta có khoảng 100.000 hàng. Điều này ngụ ý rằng không phải người dùng nào cũng đánh giá mọi bộ phim. Vì vậy, chúng ta có thể coi những dữ liệu này như một ma trận rất lớn, với người dùng ở các hàng và phim ở các cột, với nhiều ô trống. Hàm Pivot_wider cho phép chúng ta chuyển đổi nó sang định dạng này, nhưng nếu chúng ta thử nó cho toàn bộ ma trận, nó sẽ bị lỗi R. Hãy hiển thị ma trận cho sáu người dùng và bốn phim.
+Bạn có thể coi nhiệm vụ của hệ thống khuyến nghị là điền các NA vào bảng trên. Để xem ma trận thưa thớt đến mức nào, đây là ma trận cho một mẫu ngẫu nhiên gồm 100 phim và 100 người dùng có màu vàng biểu thị sự kết hợp người dùng/phim mà chúng tôi có xếp hạng.
+Hãy xem xét một số đặc tính chung của dữ liệu để hiểu rõ hơn về những thách thức.
+
+Điều đầu tiên chúng tôi nhận thấy là một số phim được đánh giá cao hơn những phim khác. Dưới đây là sự phân phối. Điều này không làm chúng ta ngạc nhiên vì có những bộ phim bom tấn được hàng triệu người xem và những bộ phim độc lập, mang tính nghệ thuật chỉ được một số ít người xem. Quan sát thứ hai của chúng tôi là một số người dùng tích cực hơn những người khác trong việc xếp hạng phim:
+Chúng tôi cần xây dựng một thuật toán với dữ liệu chúng tôi đã thu thập, sau đó sẽ được áp dụng ngoài tầm kiểm soát của chúng tôi khi người dùng tìm kiếm đề xuất phim. Vì vậy, hãy tạo một bộ thử nghiệm để đánh giá độ chính xác của các mô hình mà chúng tôi triển khai. Chúng tôi chỉ xem xét những bộ phim được xếp hạng năm lần trở lên và những người dùng đã xếp hạng hơn 100 bộ phim trong số này. Sau đó, chúng tôi chia dữ liệu thành tập huấn luyện và tập kiểm tra bằng cách xác nhận 20% xếp hạng do mỗi người dùng đưa ra cho tập kiểm tra:
+```{r}
+set.seed(2006)
+indexes <- split(1:nrow(movielens), movielens$userId)
+test_ind <- sapply(indexes, function(ind) sample(ind, ceiling(length(ind)*.2))) |>
+  unlist(use.names = TRUE) |> sort()
+test_set <- movielens[test_ind,]
+train_set <- movielens[-test_ind,]
+```
+
+Để đảm bảo chúng tôi không bao gồm các phim không có trong cả tập thử nghiệm và tập huấn luyện, chúng tôi xóa các mục nhập bằng hàm semi_join:
+```{r}
+test_set <- test_set |> 
+  semi_join(train_set, by = "movieId")
+train_set <- train_set |> 
+  semi_join(test_set, by = "movieId")
+```
+
+Cuối cùng, chúng tôi sử dụng Pivot_wider để tạo ma trận với người dùng được biểu thị bằng hàng và phim được biểu thị bằng cột
+```{r}
+y <- select(train_set, movieId, userId, rating) |>
+  pivot_wider(names_from = movieId, values_from = rating) 
+rnames <- y$userId
+y <- as.matrix(y[,-1])
+rownames(y) <- rnames
+```
+cùng với một bảng để ánh xạ id phim tới tiêu đề:
+```{r}
+movie_map <- train_set |> select(movieId, title) |> distinct(movieId, .keep_all = TRUE)
+```
+
+22.2 Hàm mất mát
+Thử thách Netflix đã quyết định người chiến thắng dựa trên lỗi bình phương trung bình dư (RMSE) trên bộ thử nghiệm. Chúng tôi xác định như đánh giá cho phim bởi người dùng
+ và biểu thị dự đoán của chúng tôi với. RMSE sau đó được định nghĩa là:
+với là số lượng kết hợp người dùng/phim và tổng xuất hiện trên tất cả các kết hợp này.
+Chúng ta có thể giải thích RMSE tương tự như độ lệch chuẩn: đó là lỗi điển hình mà chúng ta mắc phải khi dự đoán xếp hạng phim. Nếu con số này lớn hơn 1, điều đó có nghĩa là lỗi thông thường của chúng tôi lớn hơn một sao, điều này là không tốt. Trong R, chúng ta có thể định nghĩa một hàm để tính đại lượng này như sau:
+```{r}
+RMSE <- function(true_ratings, predicted_ratings){
+    sqrt(mean((true_ratings - predicted_ratings)^2))
+  }
+```
+Trong hai chương tiếp theo, chúng tôi giới thiệu hai khái niệm, chính quy hóa và nhân tử hóa ma trận, đã được những người chiến thắng trong thử thách Netflix sử dụng để đạt được RMSE thấp nhất.
+22.3 Mô hình đầu tiên
+Hãy bắt đầu bằng cách xây dựng hệ thống đề xuất đơn giản nhất có thể: chúng tôi dự đoán xếp hạng giống nhau cho tất cả các phim bất kể người dùng. Dự đoán này sẽ là con số nào? Chúng ta có thể sử dụng cách tiếp cận dựa trên mô hình để trả lời câu hỏi này. Một mô hình giả định xếp hạng giống nhau cho tất cả phim và người dùng với tất cả sự khác biệt được giải thích bằng biến thể ngẫu nhiên sẽ trông như thế này:
+với các lỗi độc lập được lấy mẫu từ cùng một phân phối có tâm ở 0 và đánh giá thực sự cho tất cả các bộ phim. Chúng ta biết rằng ước lượng tối thiểu hóa RMSE là ước lượng bình phương nhỏ nhất của và trong trường hợp này là mức trung bình của tất cả các xếp hạng:
+```{r}
+mu <- mean(y, na.rm = TRUE)
+mu
+#> [1] 3.58
+```
+Nếu chúng tôi dự đoán tất cả các xếp hạng chưa biết với
+ chúng tôi thu được RMSE sau:
+```{r}
+naive_rmse <- RMSE(test_set$rating, mu)
+naive_rmse
+#> [1] 1.05
+```
+ 
+Hãy nhớ rằng nếu bạn cắm bất kỳ số nào khác, bạn sẽ nhận được RMSE cao hơn. Ví dụ:
+```{r}
+predictions <- rep(3, nrow(test_set))
+RMSE(test_set$rating, predictions)
+#> [1] 1.19
+```
+
+Từ việc nhìn vào sự phân bố của các xếp hạng, chúng ta có thể hình dung rằng đây là độ lệch chuẩn của sự phân bố đó. Chúng tôi nhận được RMSE khoảng 1. Để giành được giải thưởng lớn trị giá 1.000.000 USD, đội tham gia phải nhận được RMSE khoảng 0,857. Vì vậy, chúng tôi chắc chắn có thể làm tốt hơn!
+Khi chúng ta tiếp tục, chúng ta sẽ so sánh các cách tiếp cận khác nhau.
+
+22.4 Mô hình hóa hiệu ứng phim
+Theo kinh nghiệm của chúng tôi, một số phim thường được đánh giá cao hơn những phim khác. Trực giác này, rằng các bộ phim khác nhau được xếp hạng khác nhau, đã được xác nhận bằng dữ liệu. Chúng ta có thể sử dụng mô hình tuyến tính với hiệu quả điều trị
+ cho mỗi bộ phim, có thể được hiểu là hiệu ứng phim hoặc sự khác biệt giữa thứ hạng trung bình của phim và trung bình tổng thể:
+Sách giáo khoa thống kê có đề cập đế Tuy nhiên, đây là tác dụng điều trị, trong các tài liệu thử thách của Netflix, họ gọi chúng là thành kiến, do đó ký hiệu.
+Chúng ta lại có thể sử dụng bình phương tối thiểu để ước lượngtheo cách sau:
+```{r}
+fit <- lm(rating ~ as.factor(movieId), data = movielens)
+```
+
+Bởi vì có hàng ngàn
+ vì mỗi phim có một phim nên hàm lm() ở đây sẽ rất chậm. Do đó, chúng tôi khuyên bạn không nên chạy mã ở trên. Nhưng trong tình huống cụ thể này, chúng ta biết rằng ước lượng bình phương nhỏ nhất
+ chỉ là trung bình của
+ cho mỗi bộ phim
+. Vì vậy, chúng ta có thể tính toán chúng theo cách này (chúng ta sẽ bỏ ký hiệu mũ trong mã để thể hiện các ước tính trong tương lai):
+```{r}
+b_i <- colMeans(y - mu, na.rm = TRUE)
+```
+
+Chúng ta có thể thấy rằng những ước tính này thay đổi đáng kể:
+```{r}
+hist(b_i)
+```
+Nhớ vì vậy một ngụ ý xếp hạng năm sao hoàn hảo.
+Hãy xem dự đoán của chúng tôi cải thiện đến mức nào khi chúng tôi sử dụng:
+```{r}
+fit_movies <- data.frame(movieId = as.integer(colnames(y)), 
+                         mu = mu, b_i = b_i)
+left_join(test_set, fit_movies, by = "movieId") |> 
+  mutate(pred = mu + b_i) |> 
+  summarize(rmse = RMSE(rating, pred))
+#>    rmse
+#> 1 0.991
+```
+Chúng tôi đã thấy một sự cải thiện. Nhưng liệu chúng ta có thể làm nó tốt hơn không?
+22.5 Hiệu ứng người dùng
+Hãy tính xếp hạng trung bình cho người dùng
+ dành cho những người đã xếp hạng 100 phim trở lên:
+```{r}
+b_u <- rowMeans(y, na.rm = TRUE)
+hist(b_u, nclass = 30)
+```
+ 
+Lưu ý rằng cũng có sự khác biệt đáng kể giữa những người dùng: một số người dùng rất cáu kỉnh và những người khác lại yêu thích mọi bộ phim. Điều này ngụ ý rằng một cải tiến hơn nữa cho mô hình của chúng tôi có thể là:
+Ở đâu là một hiệu ứng dành riêng cho người dùng. Bây giờ nếu một người dùng cáu kỉnh (tiêu cực) đánh giá một bộ phim hay (tích cực), các hiệu ứng trái ngược nhau và chúng tôi có thể dự đoán chính xác rằng người dùng này đã cho bộ phim tuyệt vời này điểm 3 thay vì điểm 5.
+Để phù hợp với mô hình này, chúng ta lại có thể sử dụng lm như thế này:
+```{r}
+lm(rating ~ as.factor(movieId) + as.factor(userId))
+```
+nhưng, vì những lý do được mô tả trước đó, chúng tôi sẽ không làm như vậy. Thay vào đó, chúng ta sẽ tính gần đúng bằng cách tính Và  ước tính như mức trung bình của:
+```{r}
+b_u <- rowMeans(sweep(y - mu, 2, b_i), na.rm = TRUE)
+```
+Bây giờ chúng ta có thể xây dựng các yếu tố dự đoán và xem RMSE cải thiện đến mức nào:
+```{r}
+fit_users <- data.frame(userId = as.integer(rownames(y)), b_u = b_u)
+
+left_join(test_set, fit_movies, by = "movieId") |> 
+  left_join(fit_users, by = "userId") |> 
+  mutate(pred = mu + b_i + b_u) |> 
+  summarize(rmse = RMSE(rating, pred))
+#>   rmse
+#> 1 0.91
+```
+22.6 Bình phương nhỏ nhất bị phạt
+Cùng nhìn lại 3 bộ phim hay nhất, dựa trên ước tính của chúng tôi về hiệu ứng phim
+, cùng với số lượng xếp hạng mà xếp hạng này dựa trên. Một số phim đạt điểm tuyệt đối. Dưới đây là những cái có nhiều hơn 1 xếp hạng:
+```{r}
+n <-  colSums(!is.na(y))
+fit_movies$n <- n
+best <- fit_movies |> left_join(movie_map, by = "movieId") |> 
+  mutate(average_rating = mu + b_i) |>
+  filter(average_rating == 5 & n > 1) 
+test_set |> 
+  group_by(movieId) |>
+  summarize(test_set_averge_rating = mean(rating)) |>
+  right_join(best, by = "movieId") |>
+  select(title, average_rating, n, test_set_averge_rating) 
+#> # A tibble: 5 × 4
+#>   title                 average_rating     n test_set_averge_rating
+#>   <chr>                          <dbl> <dbl>                  <dbl>
+#> 1 Mother Night                       5     2                    4  
+#> 2 Village of the Damned              5     3                    3.5
+#> 3 Face in the Crowd, A               5     3                    5  
+#> 4 Pawnbroker, The                    5     2                    4  
+#> 5 In a Lonely Place                  5     2                    4.5
+```
+
+Tất cả những điều này có vẻ giống như những bộ phim khó hiểu. Chúng tôi có thực sự nghĩ rằng đây là 3 bộ phim hàng đầu trong cơ sở dữ liệu của chúng tôi không? Liệu dự đoán này có giữ được trên tập thử nghiệm không? Lưu ý rằng tất cả, ngoại trừ một, đều thấp hơn trong bài kiểm tra, một số thấp hơn đáng kể.
+
+Những bộ phim được cho là hay nhất này lại được rất ít người dùng đánh giá và cỡ mẫu nhỏ dẫn đến sự không chắc chắn. Do đó, những ước tính lớn hơn về
+, tiêu cực hoặc tích cực, có nhiều khả năng hơn. Vì vậy, đây là những ước tính ồn ào mà chúng ta không nên tin tưởng, đặc biệt là khi nói đến dự đoán. Những sai sót lớn có thể làm tăng RMSE của chúng ta, vì vậy chúng ta nên thận trọng hơn khi không chắc chắn.
+
+Trong các phần trước, chúng tôi đã tính toán sai số chuẩn và xây dựng khoảng tin cậy để tính đến các mức độ không chắc chắn khác nhau. Tuy nhiên, khi đưa ra dự đoán, chúng ta cần một con số, một dự đoán chứ không cần một khoảng. Đối với điều này, chúng tôi giới thiệu khái niệm chính quy hóa.
+
+Việc chính quy hóa cho phép chúng tôi loại bỏ các ước tính lớn được hình thành bằng cách sử dụng cỡ mẫu nhỏ. Nó có những điểm tương đồng với cách tiếp cận Bayes nhằm thu hẹp các dự đoán được mô tả trong Phần Chương 11.
+
+Ý tưởng chung đằng sau việc chính quy hóa là hạn chế tổng độ biến thiên của kích thước hiệu ứng. Tại sao điều này lại giúp ích? Hãy xem xét một trường hợp trong đó chúng ta có phim với 100 xếp hạng của người dùng và 4 phim chỉ với một đánh giá của người dùng. Chúng tôi dự định phù hợp với mô hình
+Giả sử chúng ta biết xếp hạng trung bình là. Nếu chúng ta sử dụng bình phương tối thiểu, ước tính cho hiệu ứng phim đầu tiên là mức trung bình của 100 xếp hạng của người dùng, mà chúng tôi mong đợi là khá chính xác. Tuy nhiên, ước tính cho phim 2, 3, 4 và 5 sẽ chỉ đơn giản là độ lệch quan sát được so với xếp hạng trung bình đó là ước tính chỉ dựa trên một con số nên nó sẽ không chính xác chút nào. Lưu ý những ước tính này gây ra lỗi bằng 0 đối với, nhưng đây là một trường hợp tập luyện quá sức. Trên thực tế, bỏ qua một người dùng và đoán rằng phim 2,3,4 và 5 chỉ là phim trung bình () có thể đưa ra dự đoán tốt hơn. Ý tưởng chung của hồi quy bị phạt là kiểm soát tổng mức độ biến đổi của hiệu ứng phim:. Cụ thể, thay vì giảm thiểu phương trình bình phương nhỏ nhất, chúng tôi giảm thiểu phương trình có thêm hình phạt:
+Số hạng đầu tiên chỉ là tổng bình phương và số hạng thứ hai là một hình phạt ngày càng lớn hơn khi nhiều lớn. Bằng cách sử dụng phép tính, chúng ta thực sự có thể chỉ ra rằng các giá trị của làm giảm thiểu phương trình này là:
+Ở đâu là số lượng xếp hạng được thực hiện cho phim. Cách tiếp cận này sẽ mang lại hiệu quả mong muốn: khi cỡ mẫu của chúng tôi là rất lớn, trường hợp này sẽ cho chúng ta ước tính ổn định, thì hình phạt thực sự bị bỏ qua vì. Tuy nhiên, khi nhỏ thì ước lượng bị co lại về 0. Càng lớn, chúng ta càng co lại. Chọn, chúng ta có thể sử dụng xác thực chéo:
+```{r}
+lambdas <- seq(0, 10, 0.1)
+
+sums <- colSums(y - mu, na.rm = TRUE)
+rmses <- sapply(lambdas, function(lambda){
+  b_i <-  sums / (n + lambda)
+  fit_movies$b_i <- b_i
+  left_join(test_set, fit_movies, by = "movieId") |> mutate(pred = mu + b_i) |> 
+    summarize(rmse = RMSE(rating, pred)) |>
+    pull(rmse)
+})
+```
+We can then select the value that minimizes the RMSE:
+```{r}
+plot(lambdas, rmses, type = "l")
+lambda <- lambdas[which.min(rmses)]
+print(lambda)
+#> [1] 3.1
+```
+
+Một khi chúng ta chọn một
+ chúng tôi có thể tính toán các ước tính chính quy và thêm vào bảng ước tính của mình:
+```{r}
+fit_movies$b_i_reg <- colSums(y - mu, na.rm = TRUE) / (n + lambda)
+```
+Để xem các ước tính thu hẹp như thế nào, hãy tạo một biểu đồ gồm các ước tính chính quy so với ước tính bình phương nhỏ nhất.
+Bây giờ, hãy cùng điểm qua top 5 phim hay nhất dựa trên ước tính bị phạt:
+#> # A tibble: 5 × 4
+#>   title                     average_rating     n test_set_averge_rating
+#>   <chr>                              <dbl> <dbl>                  <dbl>
+#> 1 Shawshank Redemption, The           4.49   244                   4.43
+#> 2 Godfather, The                      4.47   163                   4.5 
+#> 3 Thin Man, The                       4.40    10                   3.57
+#> 4 African Queen, The                  4.38    37                   4.35
+#> 5 Roger & Me                          4.37    35                   4.14
+ Những điều này có ý nghĩa hơn nhiều! Những bộ phim này được xem nhiều hơn và có nhiều xếp hạng hơn.
+
+Chúng ta có cải thiện kết quả của mình không? Hãy ước tính hiệu ứng người dùng với ước tính hiệu ứng phim mới và tính RMSE mới:
+```{r}
+fit_users$b_u <- rowMeans(sweep(y - mu, 2, b_i), na.rm = TRUE)
+left_join(test_set, fit_movies, by = "movieId") |> 
+  left_join(fit_users, by = "userId") |> 
+  mutate(pred = mu + b_i_reg + b_u) |> 
+  summarize(rmse = RMSE(rating, pred))
+#>    rmse
+#> 1 0.887
+```
+Các ước tính bị phạt mang lại sự cải thiện so với ước tính bình phương nhỏ nhất:
+23 Phân tích ma trận thành nhân tử
+Hệ số hóa ma trận là một khái niệm được sử dụng rộng rãi trong học máy. Nó liên quan rất nhiều đến phân tích nhân tố, phân tích giá trị số ít (SVD) và phân tích thành phần chính (PCA). Ở đây chúng tôi mô tả khái niệm này trong bối cảnh hệ thống đề xuất phim.
+
+Chúng tôi đã mô tả cách thực hiện mô hình:
+giải thích sự khác biệt giữa các bộ phim thông qua và sự khác biệt giữa người dùng với người dùng thông qua. Nhưng mô hình này bỏ qua một nguồn biến thiên quan trọng liên quan đến thực tế là các nhóm phim có kiểu xếp hạng tương tự nhau và các nhóm người dùng cũng có kiểu xếp hạng tương tự. Chúng ta sẽ khám phá những mô hình này bằng cách nghiên cứu phần dư:
+Chúng ta có thể tính toán các phần dư này cho mô hình mà chúng ta phù hợp trong phần trước:
+```{r}
+r <- sweep(y - mu, 2, fit_movies$b_i_reg) - fit_users$b_u
+colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
+```
+Nếu phim và mô hình hiệu ứng người dùng giải thích tất cả tín hiệu và
+ chỉ là nhiễu, thì phần dư của các phim khác nhau sẽ độc lập với nhau. Nhưng họ không như vậy. Dưới đây là một số ví dụ:
+Biểu đồ này nói rằng những người dùng thích Bố già hơn những gì mô hình mong đợi, dựa trên phim và hiệu ứng người dùng, cũng thích Bố già II nhiều hơn mong đợi. Người ta thấy mối quan hệ tương tự khi so sánh Bố già và Goodfellas. Tuy không mạnh bằng nhưng vẫn có sự tương quan. Chúng tôi cũng thấy mối tương quan giữa You've Got Mail và Sleepless in Seattle
+Bằng cách xem xét mối tương quan giữa các phim, chúng ta có thể thấy một mẫu (chúng ta đổi tên các cột để tiết kiệm không gian in):
+#>            Godfather Godfather2 Goodfellas You've Got Sleepless
+#> Godfather      1.000    0.82696      0.438     -0.285  -0.10748
+#> Godfather2     0.827    1.00000      0.574     -0.268  -0.00675
+#> Goodfellas     0.438    0.57445      1.000     -0.293  -0.27153
+#> You've Got    -0.285   -0.26767     -0.293      1.000   0.53617
+#> Sleepless     -0.107   -0.00675     -0.272      0.536   1.00000
+Có vẻ như có người thích phim hài lãng mạn hơn mong đợi, trong khi cũng có người lại thích phim xã hội đen hơn mong đợi.
+Những kết quả này cho chúng ta biết rằng có cấu trúc trong dữ liệu. Nhưng làm thế nào chúng ta có thể mô hình hóa điều này?
+
+23.1 Phân tích nhân tố
+Đây là một minh họa, sử dụng mô phỏng, về cách chúng ta có thể sử dụng một số cấu trúc để dự đoán. Giả sử phần dư r của chúng ta trông như thế này:
+```{r}
+round(r, 1)
+#>    Godfather Godfather2 Goodfellas You've Got Sleepless
+#> 1        2.1        2.5        2.4       -1.6      -1.7
+#> 2        1.9        1.4        2.0       -1.8      -1.3
+#> 3        1.8        2.7        2.3       -2.7      -2.0
+#> 4       -0.5        0.7        0.6       -0.8      -0.5
+#> 5       -0.6       -0.8        0.6        0.4       0.6
+#> 6       -0.1        0.2        0.5       -0.7       0.4
+#> 7       -0.3       -0.1       -0.4       -0.4       0.7
+#> 8        0.3        0.4        0.3        0.0       0.7
+#> 9       -1.4       -2.2       -1.5        2.0       2.8
+#> 10      -2.6       -1.5       -1.3        1.6       1.3
+#> 11      -1.5       -2.0       -2.2        1.7       2.7
+#> 12      -1.5       -1.4       -2.3        2.5       2.0
+```
+
+Dường như có một mô hình ở đây. Trên thực tế, chúng ta có thể thấy các mô hình tương quan rất mạnh mẽ:
+```{r}
+cor(r) 
+#>            Godfather Godfather2 Goodfellas You've Got Sleepless
+#> Godfather      1.000      0.923      0.911     -0.898    -0.863
+#> Godfather2     0.923      1.000      0.937     -0.950    -0.969
+#> Goodfellas     0.911      0.937      1.000     -0.949    -0.956
+#> You've Got    -0.898     -0.950     -0.949      1.000     0.945
+#> Sleepless     -0.863     -0.969     -0.956      0.945     1.000
+```
+Chúng ta có thể tạo ra các vectơ q và p, điều đó có thể giải thích phần lớn cấu trúc mà chúng ta thấy. q sẽ trông như thế này:
+```{r}
+t(q) 
+#>      Godfather Godfather2 Goodfellas You've Got Sleepless
+#> [1,]         1          1          1         -1        -1
+```
+và nó thu hẹp phim thành hai nhóm: xã hội đen (mã hóa bằng 1) và lãng mạn (mã hóa -1). Chúng tôi cũng có thể giảm người dùng thành ba nhóm:
+```{r}
+t(p)
+#>      1 2 3 4 5 6 7 8  9 10 11 12
+#> [1,] 2 2 2 0 0 0 0 0 -2 -2 -2 -2
+```
+những người thích phim xã hội đen và không thích phim lãng mạn (được mã hóa là 2), những người thích phim lãng mạn và không thích phim xã hội đen (được mã hóa là -2) và những người không quan tâm (được mã hóa là 0). Điểm chính ở đây là chúng ta gần như có thể tái tạo lại
+, có 60 giá trị, với một vài vectơ có tổng cộng 17 giá trị. Lưu ý rằng p và q tương đương với các mẫu và trọng số mà chúng tôi đã mô tả trong Phần 21.5.Nếu như chứa phần dư cho người dùng cho phim chúng ta có thể viết công thức toán học sau đây cho phần dư của chúng ta.Điều này ngụ ý rằng chúng tôi có thể giải thích nhiều biến đổi hơn bằng cách sửa đổi mô hình đề xuất phim trước đây của chúng tôi thành:
+Tuy nhiên, chúng tôi đã thúc đẩy sự cần thiết củathuật ngữ với một mô phỏng đơn giản. Cấu trúc được tìm thấy trong dữ liệu thường phức tạp hơn. Ví dụ: trong mô phỏng đầu tiên này, chúng tôi giả định chỉ có một yếu tố xác định thể loại phim nào trong hai thể loại thuộc về. Nhưng cấu trúc trong dữ liệu phim của chúng tôi dường như phức tạp hơn nhiều so với phim xã hội đen và phim lãng mạn. Chúng ta có thể có nhiều yếu tố khác. Ở đây chúng tôi trình bày một mô phỏng phức tạp hơn một chút. Bây giờ chúng tôi thêm bộ phim thứ sáu, Scent of Woman.
+```{r}
+round(r, 1)
+#>    Godfather Godfather2 Goodfellas You've Got Sleepless Scent
+#> 1        0.0        0.3        2.2        0.2       0.1  -2.3
+#> 2        2.0        1.7        0.0       -1.9      -1.7   0.3
+#> 3        1.9        2.4        0.1       -2.3      -2.0   0.0
+#> 4       -0.3        0.3        0.3       -0.4      -0.3   0.3
+#> 5       -0.3       -0.4        0.3        0.2       0.3  -0.3
+#> 6        0.9        1.1       -0.8       -1.3      -0.8   1.2
+#> 7        0.9        1.0       -1.2       -1.2      -0.7   0.7
+#> 8        1.2        1.2       -0.9       -1.0      -0.6   0.8
+#> 9       -0.7       -1.1       -0.8        1.0       1.4   0.7
+#> 10      -2.3       -1.8        0.3        1.8       1.7  -0.1
+#> 11      -1.7       -2.0       -0.1        1.9       2.3   0.2
+#> 12      -1.8       -1.7       -0.1        2.3       2.0   0.4
+```
+
+Bằng cách khám phá cấu trúc tương quan của tập dữ liệu mới này
+#>            Godfather Godfather2 Goodfellas    YGM      SS      SW
+#> Godfather      1.000     0.9760    -0.1748 -0.973 -0.9588  0.1299
+#> Godfather2     0.976     1.0000    -0.1051 -0.986 -0.9903  0.0876
+#> Goodfellas    -0.175    -0.1051     1.0000  0.180  0.0801 -0.9426
+#> YGM           -0.973    -0.9864     0.1799  1.000  0.9868 -0.1632
+#> SS            -0.959    -0.9903     0.0801  0.987  1.0000 -0.0817
+#> SW             0.130     0.0876    -0.9426 -0.163 -0.0817  1.0000
+chúng tôi lưu ý rằng có lẽ chúng tôi cần yếu tố thứ hai để giải thích thực tế là một số người dùng thích Al Pacino, trong khi những người khác không thích anh ấy hoặc không quan tâm. Lưu ý rằng cấu trúc tổng thể của mối tương quan thu được từ dữ liệu mô phỏng không khác xa với mối tương quan thực:
+#>            Godfather Godfather2 Goodfellas    YGM       SS     SW
+#> Godfather      1.000    0.82696      0.438 -0.285 -0.10748  0.362
+#> Godfather2     0.827    1.00000      0.574 -0.268 -0.00675  0.340
+#> Goodfellas     0.438    0.57445      1.000 -0.293 -0.27153  0.278
+#> YGM           -0.285   -0.26767     -0.293  1.000  0.53617 -0.289
+#> SS            -0.107   -0.00675     -0.272  0.536  1.00000 -0.307
+#> SW             0.362    0.34008      0.278 -0.289 -0.30732  1.000
+Để giải thích cấu trúc phức tạp hơn này, chúng ta cần hai yếu tố. Ví dụ một cái gì đó như thế này:
+```{r}
+t(q) 
+#>      Godfather Godfather2 Goodfellas You've Got Sleepless Scent
+#> [1,]         1          1          1         -1        -1    -1
+#> [2,]         1          1         -1         -1        -1     1
+```
+Với yếu tố đầu tiên (cột đầu tiên của q) được sử dụng để mã hóa các nhóm xã hội đen và lãng mạn và yếu tố thứ hai (cột thứ hai của q) để giải thích nhóm Al Pacino và không có nhóm Al Pacino. Chúng ta cũng sẽ cần hai bộ hệ số để giải thích sự biến thiên do
+ các loại nhóm:
+```{r}
+t(p)
+#>       1 2 3 4 5 6 7 8  9 10 11 12
+#> [1,]  1 1 1 0 0 0 0 0 -1 -1 -1 -1
+#> [2,] -1 1 1 0 0 1 1 1  0 -1 -1 -1
+```
+Mô hình có hai yếu tố có 36 tham số có thể được sử dụng để giải thích phần lớn sự biến thiên trong 72 xếp hạng:
+
+Lưu ý rằng trong một ứng dụng dữ liệu thực tế, chúng ta cần điều chỉnh mô hình này cho phù hợp với dữ liệu. Để giải thích mối tương quan phức tạp mà chúng tôi quan sát được trong dữ liệu thực, chúng tôi thường cho phép nhập các Và là các giá trị liên tục, thay vì các giá trị rời rạc như chúng ta đã sử dụng trong mô phỏng. Ví dụ: thay vì chia phim thành xã hội đen hoặc lãng mạn, chúng tôi xác định tính liên tục. Cũng lưu ý rằng đây không phải là một mô hình tuyến tính và để phù hợp với nó, chúng ta cần sử dụng một thuật toán khác với thuật toán được lm sử dụng để tìm các tham số cực tiểu hóa bình phương nhỏ nhất. Các thuật toán chiến thắng cho thử thách Netflix phù hợp với một mô hình tương tự như trên và sử dụng chính quy hóa để xử phạt các giá trị lớn của Và, thay vì sử dụng bình phương tối thiểu. Việc thực hiện phương pháp này nằm ngoài phạm vi của cuốn sách này.
+23.2 Kết nối với SVD và PCA
+Sự phân hủy:liên quan rất nhiều đến SVD và PCA. SVD và PCA là những khái niệm phức tạp, nhưng có một cách để hiểu chúng là SVD là một thuật toán tìm vectơ Và cho phép chúng ta viết lại ma trận với hàng và cột như: với độ biến thiên của mỗi thuật ngữ giảm dần và với
+nó không tương quan. Thuật toán cũng tính toán độ biến thiên này để chúng ta có thể biết được bao nhiêu ma trận, tổng độ biến thiên được giải thích khi chúng ta thêm các thuật ngữ mới. Điều này có thể cho phép chúng ta thấy rằng, chỉ với một vài thuật ngữ, chúng ta có thể giải thích hầu hết sự biến thiên. Để minh họa điều này, chúng ta sẽ chỉ xem xét một tập hợp con nhỏ các phim có nhiều xếp hạng và người dùng đã xếp hạng nhiều phim:
+```{r}
+keep <- c("Godfather, The", "Godfather: Part II, The", "Goodfellas", "Ghost", "Titanic", 
+          "Scent of a Woman")
+dat <- movielens  |> 
+  group_by(userId) |>
+  filter(n() >= 250) |> 
+  ungroup() |>
+  group_by(movieId) |>
+  filter(n() >= 50 | title %in% keep) |> 
+  ungroup() 
+
+y <- select(dat, movieId, userId, rating) |>
+  pivot_wider(names_from = movieId, values_from = rating) 
+y <- as.matrix(y[,-1])
+
+colnames(y) <- dat |> select(movieId, title) |> 
+  distinct(movieId, .keep_all = TRUE) |>
+  right_join(data.frame(movieId = as.integer(colnames(y))), by = "movieId") |>
+  pull(title)
+```
+Trước tiên, chúng tôi xóa toàn bộ phim và các hiệu ứng người dùng vì chúng tôi quan tâm đến tính biến đổi không được giải thích bởi những hiệu ứng này. Chúng tôi bắt đầu bằng cách loại bỏ các hiệu ứng phim:
+```{r}
+r <- sweep(y, 2, colMeans(y, na.rm = TRUE))
+```
+Bởi vì đối với các kỹ thuật được hiển thị ở đây, chúng tôi không thể thiếu các giá trị mà chúng tôi cần thay thế các xếp hạng bị thiếu. Có những kỹ thuật nâng cao để thực hiện việc này, một số kỹ thuật được giải thích trong phần mô tả về mục chiến thắng trong cuộc thi Netflix. Ở đây chúng ta sẽ sử dụng một cách tiếp cận đơn giản: thay thế bằng một hằng số. Bây giờ, vì phim chưa được xếp hạng có nhiều khả năng là phim mà người dùng không muốn xem nên chúng tôi sẽ thay thế xếp hạng bị thiếu bằng -1 thay vì 0, biểu thị xếp hạng trung lập.
+```{r}
+r[is.na(r)] <- -1
+```
+
+Cuối cùng, chúng tôi sẽ loại bỏ hiệu ứng người dùng tổng thể:
+```{r}
+r <- r - rowMeans(r)
+```
+Bây giờ chúng ta có thể thực hiện phân tích thành phần chính:
+```{r}
+pca <- prcomp(r)
+```
+Các vectơ q được gọi là thành phần chính và chúng được lưu trữ trong ma trận này:
+```{r}
+dim(pca$rotation)
+#> [1] 138 105
+```
+
+Trong khi p, hoặc các hiệu ứng người dùng, có ở đây:
+```{r}
+dim(pca$x)
+#> [1] 105 105
+```
+Chúng ta có thể thấy sự biến thiên của từng vectơ:
+```{r}
+qplot(1:nrow(pca$x), pca$sdev, xlab = "PC")
+#> Warning: `qplot()` was deprecated in ggplot2 3.4.0.
+```
+Chúng tôi cũng nhận thấy rằng hai thành phần chính đầu tiên có liên quan đến cấu trúc trong quan điểm về phim:
+Chỉ cần nhìn vào top 10 theo từng hướng, chúng ta thấy được một khuôn mẫu đầy ý nghĩa. Chiếc PC đầu tiên cho thấy sự khác biệt giữa các bom tấn Hollywood một mặt:
+#>  [1] "Independence Day (a.k.a. ID4)"  "Armageddon"                    
+#>  [3] "Spider-Man"                     "Mummy, The"                    
+#>  [5] "Aladdin"                        "Lion King, The"                
+#>  [7] "Harry Potter and the Sorcer..." "Twister"                       
+và những bộ phim được giới phê bình đánh giá cao:
+#>  [1] "2001: A Space Odyssey"          "Apocalypse Now"                
+#>  [3] "Fargo"                          "Being John Malkovich"          
+#>  [5] "One Flew Over the Cuckoo's ..." "Clockwork Orange, A"           
+#>  [7] "Blade Runner"                   "Shining, The"                  
+#>  [9] "Godfather, The"                 "Big Lebowski, The"
+Trong khi chiếc PC thứ hai dường như có liên quan đến những bộ phim yêu thích của mọt sách hoặc những bộ phim bạo lực.
+#>  [1] "Fight Club"                     "Lord of the Rings: The Two ..."
+#>  [3] "Lord of the Rings: The Retu..." "Matrix, The"                   
+#>  [5] "X-Men"                          "Lord of the Rings: The Fell..."
+#>  [7] "Kill Bill: Vol. 2"              "Léon: The Professional (a.k..."
+#>  [9] "Kill Bill: Vol. 1"              "Memento"
+và những bộ phim lãng mạn khác:
+#>  [1] "Babe"                 "Grease"              
+#>  [3] "Sleepless in Seattle" "Beauty and the Beast"
+#>  [5] "Ghost"                "Jerry Maguire"       
+#>  [7] "Pretty Woman"         "Titanic"             
+#>  [9] "Aladdin"              "Big"
+Việc lắp đặt một mô hình kết hợp các ước tính này là rất phức tạp. Đối với những người quan tâm đến việc triển khai phương pháp kết hợp những ý tưởng này, chúng tôi khuyên bạn nên dùng thử gói recommenderlab. Các chi tiết nằm ngoài phạm vi của cuốn sách này.
